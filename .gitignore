@@ -1,0 +1,66 @@
+# ===================================================
+# .GITIGNORE KHUSUS PROJECT VISAGE METRICS 
+# ===================================================
+
+# 1. BLOKIR SEMUA GAMBAR (Sesuai request lu mutlak)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.webp
+*.ico
+*.bmp
+
+# Abaikan folder tempat lu ngetes/nyimpen foto sementara 
+# (Hapus tanda '#' di bawah ini jika lu punya folder khusus)
+# /assets/img/
+# /uploads/
+
+# 2. KEAMANAN API KEY (HARGA MATI!)
+# Jangan biarkan API Key Gemini lu bocor ke GitHub
+.env
+.env.local
+config.js
+api_key.js
+*.env
+
+# 3. FILE SAMPAH SISTEM OS
+# File bawaan Windows/Mac yang nggak guna di GitHub
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# 4. FILE EDITOR CONFIG
+# Biar setingan VS Code lu nggak nimpa setingan VS Code temen lu
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# 5. JAGA-JAGA KALAU TEMEN LU PAKE NODE.JS (BACKEND) NANTI
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ===================================================
+# PENGECUALIAN (FILE YANG TETAP BOLEH KE-PUSH)
+# ===================================================
+# Walaupun di atas ngeblok, lu TETAP BUTUH push model Keras/TFJS 
+# biar AI lu tetep jalan di laptop temen lu.
+!/assets/models/web_model/*.json
+!/assets/models/web_model/*.bin
+
+# Python Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+bin/
+lib/
+include/

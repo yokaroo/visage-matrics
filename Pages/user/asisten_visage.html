@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Visage AI - Interaktif</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'talk': 'talk 0.3s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        talk: {
+                            '0%': { transform: 'translateY(0) scaleY(1)' },
+                            '100%': { transform: 'translateY(-5px) scaleY(1.02)' },
+                        }
+                    }
+                } 
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f0f9ff; height: 100dvh; overflow: hidden; font-family: 'Poppins', sans-serif; }
+        .bg-cyber { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 15% 50%, #ffffff, transparent 60%), radial-gradient(circle at 85% 30%, #e0f2fe, transparent 60%); }
+        
+        .bubble-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bubble-hidden { opacity: 0; transform: scale(0.9) translateY(10px); pointer-events: none; }
+        .bubble-visible { opacity: 1; transform: scale(1) translateY(0); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .dot-typing { position: relative; left: -9999px; width: 6px; height: 6px; border-radius: 3px; background-color: #0ea5e9; color: #0ea5e9; box-shadow: 9984px 0 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; animation: dot-typing 1.5s infinite linear; }
+        @keyframes dot-typing {
+            0% { box-shadow: 9984px 0 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; }
+            16.667% { box-shadow: 9984px -6px 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; }
+            33.333% { box-shadow: 9984px 0 0 0 #0ea5e9, 9999px -6px 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; }
+            50% { box-shadow: 9984px 0 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px -6px 0 0 #0ea5e9; }
+            66.667% { box-shadow: 9984px 0 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; }
+            100% { box-shadow: 9984px 0 0 0 #0ea5e9, 9999px 0 0 0 #0ea5e9, 10014px 0 0 0 #0ea5e9; }
+        }
+    </style>
+</head>
+
+<body class="antialiased w-screen relative flex flex-col items-center justify-between">
+
+    <div class="bg-cyber"></div>
+
+    <div class="w-full px-6 py-4 flex justify-between items-center z-50 shrink-0 absolute top-0">
+        <a href="landing.html" class="flex items-center gap-3 px-5 py-2.5 md:px-6 md:py-3 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-600 rounded-full hover:bg-red-50 hover:text-red-500 transition-all font-bold text-[10px] md:text-xs tracking-widest uppercase shadow-sm">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Kembali
+        </a>
+        <button id="btn-mute" class="p-2.5 md:p-3 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-500 rounded-full hover:bg-slate-100 transition shadow-sm">
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd" /></svg>
+        </button>
+    </div>
+
+    <div class="flex-grow w-full max-w-[80rem] flex flex-col lg:flex-row items-center justify-center relative z-10 px-4 pt-20 pb-4 overflow-y-auto no-scrollbar">
+        
+        <div class="w-full lg:w-1/2 h-[220px] md:h-[350px] lg:h-[550px] flex items-center justify-center lg:justify-end relative shrink-0">
+            <div id="robot-glow" class="absolute lg:right-[10%] w-[200px] h-[200px] lg:w-[300px] lg:h-[300px] bg-sky-400/20 rounded-full blur-[60px] transition-all duration-300"></div>
+            
+            <img src="../../assets/img/Robot%20Dokter.png" 
+                 alt="Dr. Visage Robot" 
+                 id="robot-image"
+                 class="h-[100%] w-auto object-contain relative z-10 animate-float drop-shadow-[0_20px_40px_rgba(14,165,233,0.3)] lg:mr-10 transition-transform">
+        </div>
+
+        <div class="w-full lg:w-1/2 flex items-center justify-center lg:justify-start relative min-h-[180px] lg:min-h-[300px] mt-4 lg:mt-0 px-2 lg:px-0 pb-4 shrink-0">
+            
+            <div id="dynamic-bubble" class="bubble-transition bubble-visible max-w-lg w-full">
+                <div id="bubble-tail" class="absolute w-5 h-5 lg:w-6 lg:h-6 bg-white/95 border-l border-t border-sky-100 transform rotate-45 -top-2.5 left-1/2 -translate-x-1/2 lg:-rotate-45 lg:-left-3 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-0 z-20"></div>
+                
+                <div id="bubble-box" class="relative z-30 bg-white/95 backdrop-blur-xl border border-sky-100 p-6 lg:p-8 rounded-3xl shadow-[0_15px_40px_rgba(14,165,233,0.15)]">
+                    
+                    <div id="speaker-label" class="flex items-center gap-2 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] font-black text-sky-600 uppercase tracking-widest">Dr. Visage</span>
+                    </div>
+                    
+                    <div id="bubble-content" class="text-slate-700 text-sm md:text-lg lg:text-xl font-medium leading-relaxed max-h-[180px] lg:max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                        Halo! Saya Dr. Visage. Ketikkan keluhan matamu di bawah, dan mari kita diskusikan solusinya.
+                    </div>
+                    
+                    <div id="typing-anim" class="hidden h-6 items-center">
+                        <div class="dot-typing ml-4"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl px-4 md:px-6 pb-6 lg:pb-10 z-20 relative shrink-0">
+        <form id="chat-form" class="bg-white/80 backdrop-blur-lg border border-slate-200 p-2 lg:p-3 rounded-[2rem] shadow-2xl flex gap-2 lg:gap-3" autocomplete="off">
+            <input type="text" id="chat-input" placeholder="Ketik pesan..." class="flex-grow px-4 lg:px-6 py-3 lg:py-4 bg-transparent outline-none text-sm lg:text-base font-medium text-slate-700 placeholder:text-slate-400">
+            <button type="submit" id="btn-send" class="w-12 h-12 lg:w-16 lg:h-14 bg-sky-500 hover:bg-sky-600 text-white rounded-3xl font-bold transition-all shadow-lg flex items-center justify-center group shrink-0">
+                <svg class="w-5 h-5 lg:w-6 lg:h-6 transform rotate-45 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+        </form>
+    </div>
+
+    <script src="../../assets/js/asisten_ai.js"></script>
+</body>
+</html>
