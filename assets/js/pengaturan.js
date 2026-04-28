@@ -1,90 +1,125 @@
 // File: assets/js/pengaturan.js
+import { supabase } from './supabaseClient.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     const formProfil = document.getElementById('formProfil');
-    // Mencari tombol submit yang terhubung ke form tersebut
     const btnSimpan = document.querySelector('button[form="formProfil"]');
+    const inputNama = document.getElementById('input-nama');
+    const inputId = document.getElementById('input-id');
+    const sidebarNama = document.getElementById('sidebar-nama-admin');
+    
+    // --- 1. OTENTIKASI & TARIK DATA PROFIL AWAL ---
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (!session) {
+        alert("Akses ditolak! Sesi telah habis.");
+        window.location.replace('../../login.html');
+        return;
+    }
 
+    const loadProfileData = async () => {
+        const { data: profile } = await supabase
+            .from('profil_pengguna')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profile) {
+            inputNama.value = profile.nama_lengkap || '';
+            inputId.value = profile.nim || profile.id.substring(0, 8).toUpperCase(); // Pakai NIP atau UUID awal
+            if(sidebarNama) sidebarNama.textContent = profile.nama_lengkap;
+        }
+    };
+    
+    await loadProfileData();
+
+    // --- 2. LOGIKA LOGOUT ADMIN ---
+    const btnLogoutAdmin = document.getElementById('btn-logout-admin');
+    if(btnLogoutAdmin) {
+        btnLogoutAdmin.addEventListener('click', async function() {
+            if(confirm("Yakin ingin keluar dari Dashboard Admin?")) {
+                await supabase.auth.signOut();
+                window.location.replace('../../login.html'); 
+            }
+        });
+    }
+
+    // --- 3. LOGIKA FORM SUBMIT (UPDATE KE SUPABASE) ---
     if (formProfil && btnSimpan) {
-        formProfil.addEventListener('submit', function(e) {
-            // Mencegah browser melakukan reload halaman secara default
+        formProfil.addEventListener('submit', async function(e) {
             e.preventDefault(); 
 
-            // Mengambil semua elemen input di dalam form
             const inputs = formProfil.querySelectorAll('input');
-            
-            // Berdasarkan urutan HTML kita:
-            // [0] Nama Lengkap
-            // [1] ID Admin (disabled)
-            // [2] Peran (disabled)
-            // [3] Password Lama
-            // [4] Password Baru
-            // [5] Konfirmasi Password Baru
-            
-            const namaLengkap = inputs[0].value;
-            const pwLama = inputs[3].value;
-            const pwBaru = inputs[4].value;
-            const pwKonfirm = inputs[5].value;
+            const namaBaru = inputs[0].value.trim();
+            const pwLama = inputs[2].value; // Index 2 karena [1] adalah ID disabled
+            const pwBaru = inputs[3].value;
+            const pwKonfirm = inputs[4].value;
 
-            // --- 1. LOGIKA VALIDASI KEAMANAN ---
-            // Jika user mencoba mengubah password (salah satu kolom password baru diisi)
+            // --- VALIDASI KEAMANAN (Jika user ingin ganti password) ---
             if (pwBaru !== "" || pwKonfirm !== "") {
-                if (pwLama === "") {
-                    alert("⚠️ Validasi Gagal: Anda wajib memasukkan 'Password Saat Ini' untuk melakukan perubahan password.");
-                    inputs[3].focus();
-                    return; // Hentikan eksekusi
-                }
+                // Di Supabase modern, kita tidak bisa mengecek "Password Lama" secara langsung di sisi client (demi keamanan)
+                // Oleh karena itu, kita cukup pastikan format password baru benar
                 if (pwBaru.length < 8) {
                     alert("⚠️ Validasi Gagal: Password baru terlalu lemah. Minimal harus 8 karakter.");
-                    inputs[4].focus();
+                    inputs[3].focus();
                     return; 
                 }
                 if (pwBaru !== pwKonfirm) {
                     alert("⚠️ Validasi Gagal: Konfirmasi password tidak cocok dengan password baru.");
-                    inputs[5].focus();
+                    inputs[4].focus();
                     return; 
                 }
             }
 
-            // --- 2. SIMULASI LOADING & PENYIMPANAN DATA ---
-            // Menyimpan elemen visual asli tombol
+            // --- SIMULASI LOADING ---
             const originalContent = btnSimpan.innerHTML;
-            
-            // Mengubah tombol menjadi state "Loading"
-            btnSimpan.innerHTML = `
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Menyimpan...
-            `;
+            btnSimpan.innerHTML = `<span class="inline-block animate-spin mr-2">⌛</span>Menyimpan...`;
             btnSimpan.disabled = true;
             btnSimpan.classList.add('opacity-70', 'cursor-not-allowed');
 
-            // Simulasi proses pengiriman data ke server/Supabase (delay 1.5 detik)
-            setTimeout(() => {
-                let pesanSukses = `✅ Berhasil: Profil atas nama "${namaLengkap}" telah diperbarui.`;
-                
-                // Tambahkan pesan ekstra jika password ikut diubah
+            try {
+                // TUGAS 1: Update Nama di Tabel Profil_Pengguna
+                const { error: updateProfileError } = await supabase
+                    .from('profil_pengguna')
+                    .update({ nama_lengkap: namaBaru })
+                    .eq('id', session.user.id);
+
+                if(updateProfileError) throw updateProfileError;
+
+                let pesanSukses = `✅ Berhasil: Profil atas nama "${namaBaru}" telah diperbarui.`;
+
+                // TUGAS 2: Update Password di Auth System (Jika diisi)
                 if (pwBaru !== "") {
+                    const { error: updateAuthError } = await supabase.auth.updateUser({
+                        password: pwBaru
+                    });
+
+                    if(updateAuthError) {
+                        alert("Gagal merubah password. Sesi Anda mungkin sudah terlalu lama. Silakan logout dan login kembali untuk mengubah password.");
+                        throw updateAuthError;
+                    }
                     pesanSukses += "\nKredensial password Anda juga telah berhasil diganti.";
                 }
                 
                 alert(pesanSukses);
+                
+                // Refresh data di layar
+                if(sidebarNama) sidebarNama.textContent = namaBaru;
 
-                // Kembalikan tombol ke keadaan semula
+                // Kosongkan form password
+                inputs[2].value = "";
+                inputs[3].value = "";
+                inputs[4].value = "";
+
+            } catch (err) {
+                console.error("Gagal update profil:", err);
+            } finally {
+                // Kembalikan tombol
                 btnSimpan.innerHTML = originalContent;
                 btnSimpan.disabled = false;
                 btnSimpan.classList.remove('opacity-70', 'cursor-not-allowed');
-
-                // Kosongkan kembali form password demi keamanan
-                inputs[3].value = "";
-                inputs[4].value = "";
-                inputs[5].value = "";
-
-            }, 1500);
+            }
         });
     }
-
 });

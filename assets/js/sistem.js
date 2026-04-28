@@ -3,6 +3,8 @@
  * Logic: Geometry EAR + CNN Ensemble (Input 84x84 Locked)
  */
 
+import { insertDeteksiMata, getCurrentUser, insertLogAktivitas } from './auth-helper.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("🚀 Visage Metrics: Engine Start...");
 
@@ -17,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         canvasKanan: document.getElementById('canvasKanan'),
         canvasKiri: document.getElementById('canvasKiri'),
         statusIndicator: document.getElementById('status-indicator'),
-        inputHasil: document.getElementById('input_hasil'),
         scanEffect: document.getElementById('scan-effect'),
         resPlaceholder: document.getElementById('res-placeholder'),
         resSayu: document.getElementById('res-sayu'),
@@ -27,6 +28,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let aiModel = null;
     let isModelLoaded = false;
+    let currentUser = null;
+    
+    // Objek sementara penyimpan data
+    let detectionData = {
+        user_id: null,
+        blink_rate: 0,
+        eye_closure: 0,
+        head_tilt: 0,
+        status_mata: 'normal',
+        durasi_sesi: 0
+    };
+
+    // Ambil data User saat halaman dimuat
+    getCurrentUser().then(user => {
+        if (user) {
+            currentUser = user;
+            detectionData.user_id = user.id;
+        } else {
+            alert("Akses Ditolak. Harap login kembali.");
+            window.location.href = "../../login.html";
+        }
+    });
+
+    // --- SIMPAN HASIL DETEKSI KE SUPABASE ---
+    if (elements.btnSave) {
+        elements.btnSave.addEventListener('click', async function(e) {
+            e.preventDefault(); // Mencegah form reload bawaan
+
+            if(!currentUser) {
+                alert("Sesi Anda telah habis, silakan login ulang.");
+                return;
+            }
+
+            const originalText = elements.btnSave.innerHTML;
+            elements.btnSave.disabled = true;
+            elements.btnSave.innerHTML = '<span class="inline-block animate-spin mr-2">⌛</span>Menyimpan...';
+
+            try {
+                // Insert ke database Supabase
+                const { error } = await insertDeteksiMata(detectionData);
+
+                if (error) throw error;
+
+                // Log aktivitas
+                await insertLogAktivitas({
+                    tipe_log: 'DETEKSI_MATA',
+                    deskripsi: `Hasil deteksi statis: ${detectionData.status_mata.toUpperCase()}`,
+                    user_id: currentUser.id
+                });
+
+                alert('Hasil klasifikasi berhasil disimpan ke database!');
+            } catch (err) {
+                alert('Gagal menyimpan hasil deteksi: ' + err.message);
+            } finally {
+                elements.btnSave.disabled = false;
+                elements.btnSave.innerHTML = originalText;
+            }
+        });
+    }
 
     const enableAnalyzeButton = () => {
         if (elements.btnAnalyze) {
@@ -46,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => reject(new Error('Image load timeout')), 5000);
     });
 
-    // --- UI EVENTS ---
+    // --- UI EVENTS FILE UPLOAD ---
     elements.imageInput.onclick = (e) => e.stopPropagation(); 
     const triggerUpload = (e) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -76,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- LOAD RESOURCES ---
+    // --- LOAD RESOURCES (MODEL) ---
     async function loadResources() {
         try {
             aiModel = await tf.loadLayersModel('../../assets/models/web_model/model.json', {compile: false});
@@ -106,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return (a + b) / (2.0 * c);
     }
 
-    // --- AI ENGINE (KETERASAN TINGGI, DIMENSI 84x84) ---
+    // --- AI ENGINE ---
     async function getEyePrediction(landmarks, indices, targetCanvas) {
         const w = elements.imagePreview.naturalWidth;
         const h = elements.imagePreview.naturalHeight;
@@ -119,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let y1 = Math.max(0, Math.min(...ys) - padding);
         let y2 = Math.min(h, Math.max(...ys) + padding);
 
-        // KUNCI: Paksa ukuran canvas persis seperti yang diminta Model (84x84)
         targetCanvas.width = 84; 
         targetCanvas.height = 84;
         
@@ -131,19 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             return tf.tidy(() => {
-                // 1. Ekstrak Pixel (Rank 3: [84, 84, 3])
                 let imgTensor = tf.browser.fromPixels(targetCanvas);
-                
-                // 2. Tambah Dimensi Batch (Rank 4: [1, 84, 84, 3])
                 let batchedTensor = imgTensor.expandDims(0);
-                
-                // 3. Cast ke Float32 dan Normalisasi
                 let normalizedTensor = batchedTensor.toFloat().div(255.0);
-                
-                // 4. Eksekusi Prediksi
                 const prediction = aiModel.predict(normalizedTensor);
-                
-                // 5. Tarik Hasil Instan & Sinkron
                 return prediction.dataSync()[0]; 
             });
         } catch (err) {
@@ -153,7 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- EXECUTION PIPELINE ---
-    elements.btnAnalyze.onclick = async () => {
+    elements.btnAnalyze.onclick = async (e) => {
+        e.preventDefault();
         const engine = await faceMeshEngine;
         elements.scanEffect.classList.remove('hidden');
         elements.statusIndicator.style.backgroundColor = "#0ea5e9";
@@ -200,22 +251,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Ensemble Gating
         let finalAI = rawAI < 0.5 ? Math.pow(rawAI * 2, 3) / 2 : 1 - (Math.pow((1 - rawAI) * 2, 3) / 2);
-        if (avgEAR >= 0.31) finalAI = Math.min(finalAI, 0.15); // Paksa segar jika melotot
-        if (avgEAR <= 0.23) finalAI = Math.max(finalAI, 0.85); // Paksa sayu jika merem
+        if (avgEAR >= 0.31) finalAI = Math.min(finalAI, 0.15); 
+        if (avgEAR <= 0.23) finalAI = Math.max(finalAI, 0.85); 
 
         // Update UI
         elements.resSayu.classList.add('hidden');
         elements.resSegar.classList.add('hidden');
 
+        // Menyusun Data untuk dikirim ke Database
+        // Mengakali skema: EAR diselipkan di eye_closure, Confidence diselipkan di blink_rate
+        detectionData.eye_closure = parseFloat(avgEAR.toFixed(3));
+        detectionData.blink_rate = parseFloat((finalAI * 100).toFixed(1));
+        detectionData.head_tilt = 0; // Foto diam tidak menghitung ini
+
         if (avgEAR < 0.25 || finalAI > 0.55) {
             elements.resSayu.classList.remove('hidden');
             elements.statusIndicator.style.backgroundColor = "#ef4444";
-            if (elements.inputHasil) elements.inputHasil.value = "SAYU";
+            detectionData.status_mata = 'lelah';
             elements.resSayu.querySelector('p').innerHTML = `AI Confidence: <b>${(finalAI * 100).toFixed(1)}%</b><br>Eye Aspect Ratio: <b>${avgEAR.toFixed(3)}</b>`;
         } else {
             elements.resSegar.classList.remove('hidden');
             elements.statusIndicator.style.backgroundColor = "#10b981";
-            if (elements.inputHasil) elements.inputHasil.value = "SEGAR";
+            detectionData.status_mata = 'segar';
             elements.resSegar.querySelector('p').innerHTML = `Freshness Index: <b>${((1 - finalAI) * 100).toFixed(1)}%</b><br>Eye Aspect Ratio: <b>${avgEAR.toFixed(3)}</b>`;
         }
 
@@ -226,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    elements.btnReset.onclick = () => { location.reload(); };
+    elements.btnReset.onclick = (e) => { e.preventDefault(); location.reload(); };
 
     function resetResultUI() {
         if(elements.resSayu) elements.resSayu.classList.add('hidden');

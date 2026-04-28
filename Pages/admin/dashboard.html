@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Visage Metrics</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <link rel="stylesheet" href="../../assets/css/style.css">
 
-    <script src="../../assets/js/admin_dashboard.js" defer></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'] } } } }
+    </script>
 </head>
 
-<body class="bg-white text-slate-800 font-sans antialiased flex h-screen overflow-hidden selection:bg-sky-200">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex h-screen overflow-hidden selection:bg-sky-200">
 
-    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-20 h-full shadow-[10px_0_30px_rgba(14,165,233,0.05)] shrink-0">
+    <aside
+        class="w-72 bg-white/90 backdrop-blur-xl border-r border-slate-200 flex flex-col z-20 h-full shadow-[10px_0_30px_rgba(14,165,233,0.05)] shrink-0">
         <div class="h-24 flex items-center px-8 border-b border-slate-200 shrink-0">
             <a href="dashboard.html" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 flex items-center justify-center text-sky-500 rounded-xl bg-sky-50 border border-sky-100">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                <div
+                    class="w-10 h-10 flex items-center justify-center text-sky-500 rounded-xl bg-sky-50 border border-sky-100">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" class="w-6 h-6">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                     </svg>
@@ -36,116 +40,177 @@
 
         <nav class="flex-grow overflow-y-auto no-scrollbar py-8 flex flex-col gap-2">
             <p class="px-8 text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Menu Utama</p>
-            
-            <a href="dashboard.html" class="sidebar-item active flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                Dashboard
+            <a href="dashboard.html"
+                class="sidebar-item active flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg> Dashboard
             </a>
-            
-            <a href="data_analitik_hari_ini.html" class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                Data Analitik
+            <a href="data_analitik_hari_ini.html"
+                class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg> Data Analitik
             </a>
-
-            <a href="manajemen_user.html" class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                Manajemen User
+            <a href="manajemen_user.html"
+                class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg> Manajemen User
             </a>
-            
-            <a href="pengaturan.html" class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Pengaturan
+            <a href="pengaturan.html"
+                class="sidebar-item flex items-center gap-4 px-8 py-4 text-sm font-bold text-slate-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg> Pengaturan
             </a>
         </nav>
 
         <div class="p-6 border-t border-slate-200 bg-slate-50/50 shrink-0">
             <div class="flex items-center gap-4 mb-4">
-                <div class="w-10 h-10 rounded-full bg-sky-100 border border-sky-200 flex items-center justify-center text-xl shadow-sm">👨‍💼</div>
+                <div
+                    class="w-10 h-10 rounded-full bg-sky-100 border border-sky-200 flex items-center justify-center text-xl shadow-sm">
+                    👨‍💼</div>
                 <div>
                     <h4 class="text-sm font-bold text-slate-800">Admin Utama</h4>
                     <p class="text-[10px] text-sky-600 font-bold uppercase tracking-widest">ID: ADM-001</p>
                 </div>
             </div>
-            <button id="btn-logout-admin" class="w-full py-3 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all tracking-[0.2em] text-[10px] uppercase flex justify-center items-center gap-2 shadow-sm">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Logout
+            <button id="btn-logout-admin"
+                class="w-full py-3 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all tracking-[0.2em] text-[10px] uppercase flex justify-center items-center gap-2 shadow-sm">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg> Logout
             </button>
         </div>
     </aside>
 
     <div class="flex-grow flex flex-col h-full overflow-hidden relative z-10 w-full bg-slate-50/30">
-        
-        <header class="h-24 bg-white/60 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 shrink-0">
+
+        <header
+            class="h-24 bg-white/60 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 shrink-0">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">Overview System</h1>
                 <p class="text-xs text-slate-500 font-medium mt-1">Pantauan metrik kelelahan visual hari ini</p>
             </div>
-            
+
             <div class="flex items-center gap-6">
                 <div class="relative hidden md:block">
-                    <input type="text" placeholder="Cari Mahasiswa/NIM..." class="w-64 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm text-slate-700 placeholder:text-slate-400">
-                    <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <input type="text" placeholder="Cari Mahasiswa/NIM..."
+                        class="w-64 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm text-slate-700 placeholder:text-slate-400">
+                    <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </div>
 
-                <button class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition relative shadow-sm">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+                <button
+                    class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition relative shadow-sm">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span
+                        class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
                 </button>
             </div>
         </header>
 
         <main class="flex-grow overflow-y-auto p-6 md:p-10 no-scrollbar relative w-full">
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
-                <div class="glass-panel-admin p-6 rounded-3xl flex items-center gap-5">
-                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500">
-                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <div class="bg-white border border-slate-200 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+                    <div
+                        class="w-14 h-14 shrink-0 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Total Terdeteksi</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2">45 <span class="text-xs font-bold text-slate-500">Orang</span></h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Total
+                            Inferensi</p>
+                        <h3 id="stat-total"
+                            class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2 animate-pulse">...
+                            <span class="text-xs font-bold text-slate-500">Gambar</span></h3>
                     </div>
                 </div>
 
-                <div class="glass-panel-admin p-6 rounded-3xl flex items-center gap-5">
-                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500">
-                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <div class="bg-white border border-slate-200 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+                    <div
+                        class="w-14 h-14 shrink-0 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Kondisi Segar</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2">33 <span class="text-xs font-bold text-emerald-500">Orang</span></h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Kondisi
+                            Segar</p>
+                        <h3 id="stat-segar"
+                            class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2 animate-pulse">...
+                            <span class="text-xs font-bold text-emerald-500">Gambar</span></h3>
                     </div>
                 </div>
 
-                <div class="glass-panel-admin p-6 rounded-3xl flex items-center gap-5">
-                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 relative">
-                        <span class="absolute inset-0 rounded-2xl border-2 border-red-400 border-dashed animate-[spin_4s_linear_infinite] opacity-30"></span>
-                        <svg class="w-7 h-7 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <div class="bg-white border border-slate-200 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+                    <div
+                        class="w-14 h-14 shrink-0 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 relative">
+                        <span
+                            class="absolute inset-0 rounded-2xl border-2 border-red-400 border-dashed animate-[spin_4s_linear_infinite] opacity-30"></span>
+                        <svg class="w-7 h-7 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Kondisi Sayu</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2">12 <span class="text-xs font-bold text-red-500">Orang</span></h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Kondisi
+                            Sayu</p>
+                        <h3 id="stat-sayu"
+                            class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2 animate-pulse">...
+                            <span class="text-xs font-bold text-red-500">Gambar</span></h3>
                     </div>
                 </div>
 
-                <div class="glass-panel-admin p-6 rounded-3xl flex items-center gap-5">
-                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500">
-                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <div class="bg-white border border-slate-200 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+                    <div
+                        class="w-14 h-14 shrink-0 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Latensi Sistem</p>
-                        <h3 class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2">14<span class="text-lg">ms</span> <span class="text-xs font-bold text-emerald-500 uppercase">Stabil</span></h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1">Latensi
+                            Database</p>
+                        <h3 id="stat-latensi"
+                            class="text-3xl font-black text-slate-800 mt-1 flex items-baseline gap-2 animate-pulse">
+                            ...<span class="text-lg">ms</span> <span
+                                class="text-xs font-bold text-emerald-500 uppercase">Live</span></h3>
                     </div>
                 </div>
             </div>
 
-            <div class="glass-panel-admin p-8 rounded-[2.5rem] w-full mb-8">
+            <div class="bg-white border border-slate-200 p-8 rounded-[2.5rem] w-full mb-8 shadow-sm">
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h3 class="text-xl font-black text-slate-800">Perbandingan Kondisi Visual (Per Jam)</h3>
-                        <p class="text-xs text-slate-500 font-medium">Melacak jumlah mahasiswa Mata Segar vs Mata Sayu secara absolut</p>
+                        <p class="text-xs text-slate-500 font-medium">Melacak inferensi gambar Mata Segar vs Mata Sayu
+                            hari ini</p>
                     </div>
-                    <span class="px-3 py-1 bg-sky-50 text-sky-600 border border-sky-100 rounded-full text-[10px] font-bold tracking-widest uppercase">Live Update</span>
+                    <span
+                        class="px-3 py-1 bg-sky-50 text-sky-600 border border-sky-100 rounded-full text-[10px] font-bold tracking-widest uppercase animate-pulse">Live
+                        Update</span>
                 </div>
                 <div class="relative w-full h-[350px]">
                     <canvas id="comparisonChart"></canvas>
@@ -153,53 +218,33 @@
             </div>
 
             <div class="grid lg:grid-cols-2 gap-8 w-full">
-                
-                <div class="glass-panel-admin p-8 rounded-[2.5rem] w-full">
+
+                <div class="bg-white border border-slate-200 p-8 rounded-[2.5rem] w-full shadow-sm">
                     <h3 class="text-lg font-black text-slate-800 mb-1">Distribusi Status Mahasiswa</h3>
-                    <p class="text-xs text-slate-500 font-medium mb-6">Berdasarkan Program Studi (Orang)</p>
+                    <p class="text-xs text-slate-500 font-medium mb-6">Berdasarkan Program Studi (Total Gambar)</p>
                     <div class="relative w-full h-[250px]">
                         <canvas id="prodiChart"></canvas>
                     </div>
                 </div>
 
-                <div class="glass-panel-admin p-8 rounded-[2.5rem] w-full flex flex-col">
+                <div class="bg-white border border-slate-200 p-8 rounded-[2.5rem] w-full flex flex-col shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-black text-slate-800">Log Aktivitas Terbaru</h3>
-                        <a href="#" class="text-xs text-sky-500 font-bold hover:underline">Lihat Semua</a>
+                        <a href="data_analitik_hari_ini.html"
+                            class="text-xs text-sky-500 font-bold hover:underline">Lihat Detail</a>
                     </div>
-                    
-                    <div class="flex-grow flex flex-col gap-4 overflow-y-auto pr-2 no-scrollbar">
-                        <div class="flex items-start gap-4 p-3 rounded-2xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                            <div class="w-2 h-2 mt-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] shrink-0"></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-bold text-slate-700">Terdeteksi Kelelahan Visual</p>
-                                <p class="text-xs text-slate-500 mt-0.5">NIM: 1201230001 (Sains Data) berpindah ke status Mata Sayu.</p>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-400 shrink-0">14:23 WIB</span>
-                        </div>
 
-                        <div class="flex items-start gap-4 p-3 rounded-2xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                            <div class="w-2 h-2 mt-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0"></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-bold text-slate-700">Kembali Fokus</p>
-                                <p class="text-xs text-slate-500 mt-0.5">NIM: 1201230088 (Teknik Informatika) status kembali ke Mata Segar.</p>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-400 shrink-0">14:10 WIB</span>
-                        </div>
-
-                        <div class="flex items-start gap-4 p-3 rounded-2xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                            <div class="w-2 h-2 mt-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)] shrink-0"></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-bold text-slate-700">Sistem Kalibrasi</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Node Kamera 04 berhasil diinisialisasi ulang.</p>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-400 shrink-0">13:45 WIB</span>
-                        </div>
+                    <div id="log-container" class="flex-grow flex flex-col gap-4 overflow-y-auto pr-2 no-scrollbar">
+                        <div class="text-center py-10 text-slate-400 font-medium animate-pulse text-sm">Menarik data
+                            aktivitas riil dari database...</div>
                     </div>
                 </div>
             </div>
 
         </main>
     </div>
+
+    <script type="module" src="../../assets/js/admin_dashboard.js"></script>
 </body>
+
 </html>
