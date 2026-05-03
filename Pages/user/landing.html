@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visage Metrics - Visual Fatigue Monitor</title>
+    <title>Workspace - Visage Metrics</title>
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PERHATIAN: Sesuaikan path ini jika file tidak di dalam sub-folder -->
     <link rel="stylesheet" href="../../assets/css/style.css">
 
     <script>
@@ -20,399 +20,360 @@
                     animation: {
                         'blob': 'blob 12s infinite alternate',
                         'float-large': 'floatLarge 8s ease-in-out infinite',
-                        'scan-vertical': 'scanV 4s linear infinite',
-                        'pulse-warning': 'pulseWarning 3s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
         }
     </script>
 
+    <!-- PERHATIAN: Sesuaikan path js ini juga -->
     <script type="module" src="../../assets/js/landing.js" defer></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4; 
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            border-radius: 2.5rem;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+    </style>
 </head>
 
-<body class="font-sans antialiased selection:bg-sky-200 min-h-screen flex flex-col relative">
+<body class="font-sans antialiased selection:bg-sky-200 min-h-screen flex flex-col relative bg-transparent">
 
+    <!-- Animasi Latar Belakang -->
     <div class="bg-cyber"></div>
     <div class="bg-grid"></div>
 
-    <div
-        class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-sky-400/20 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]">
-    </div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-400/10 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]"
-        style="animation-delay: 4s;"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-sky-400/20 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-400/10 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]" style="animation-delay: 4s;"></div>
 
-    <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-40 transition-all duration-300"
-        id="navbar">
+    <!-- NAVBAR WORKSPACE -->
+    <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-40 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.02)]" id="navbar">
         <div class="max-w-[90rem] mx-auto px-6 lg:px-10">
             <div class="flex justify-between items-center h-24">
-                <a href="#hero" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 flex items-center justify-center text-sky-500 rounded-xl">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="w-7 h-7 transition-all duration-300 group-hover:scale-110">
+                
+                <a href="#status-utama" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 flex items-center justify-center text-sky-500 rounded-xl bg-white border border-sky-100 shadow-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 transition-all duration-300 group-hover:scale-110">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                             <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
                         </svg>
                     </div>
-                    <div
-                        class="font-black text-xl tracking-[0.2em] text-slate-800 uppercase group-hover:text-sky-600 transition">
-                        VISAGE METRICS</div>
+                    <div class="font-black text-xl tracking-[0.2em] text-slate-800 uppercase group-hover:text-sky-600 transition">VISAGE METRICS</div>
                 </a>
 
-                <div class="hidden lg:flex space-x-10 font-bold text-xs tracking-widest uppercase">
-                    <a href="#hero" class="text-sky-600 border-b-2 border-sky-500 pb-1">HOME</a>
-                    <a href="#problem" class="text-slate-500 hover:text-sky-600 transition pb-1">PROBLEM</a>
-                    <a href="#solution" class="text-slate-500 hover:text-sky-600 transition pb-1">SOLUTION</a>
-                    <a href="#asisten" class="text-slate-500 hover:text-sky-600 transition pb-1 relative group">
-                        ASISTEN AI
-                        <span class="absolute -top-3 -right-4 flex h-3 w-3">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                        </span>
-                    </a>
-                    <a href="about.html" id="nav-team-link"
-                        class="text-slate-500 hover:text-sky-600 transition pb-1">TEAM</a>
+                <div class="hidden md:flex space-x-10 font-bold text-[11px] tracking-widest uppercase">
+                    <a href="#status-utama" class="text-sky-600 border-b-2 border-sky-500 pb-1">STATUS MATAMU</a>
+                    <a href="#riwayat" class="text-slate-500 hover:text-sky-600 transition pb-1">RIWAYAT</a>
+                    <a href="#asisten" class="text-slate-500 hover:text-sky-600 transition pb-1">ASISTEN AI</a>
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <button id="nav-profile-btn"
-                        class="hidden flex items-center justify-center w-11 h-11 bg-sky-50 border border-sky-100 text-sky-600 hover:bg-sky-100 hover:text-sky-700 rounded-xl transition-all shadow-sm hover:scale-105 group relative cursor-pointer z-50">
-                        <span class="text-xl pointer-events-none">👨‍🎓</span>
-                        <span
-                            class="absolute -bottom-8 bg-white text-slate-600 text-[10px] tracking-widest px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-200 shadow-md">PROFIL</span>
-                    </button>
+                    <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-full mr-2">
+                        <span class="text-[10px] font-black tracking-widest text-slate-500 uppercase">Workspace Aktif</span>
+                    </div>
 
-                    <a id="nav-login-btn" href="../../login.html"
-                        class="px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-full font-extrabold text-xs tracking-widest hover:from-sky-400 hover:to-blue-500 transition shadow-lg shadow-sky-500/30 text-center">
-                        LOGIN
-                    </a>
+                    <button id="nav-profile-btn" class="flex items-center justify-center w-11 h-11 bg-white border border-slate-200 text-slate-600 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 rounded-xl transition-all shadow-sm hover:scale-105 group relative cursor-pointer z-50">
+                        <span class="text-xl pointer-events-none">👨‍🎓</span>
+                        <span class="absolute -bottom-8 bg-slate-800 text-white text-[10px] tracking-widest px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md">PROFIL</span>
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="flex flex-col relative flex-grow">
-        <section id="hero"
-            class="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-32 relative z-10 bg-transparent">
-            <div class="absolute inset-0 overflow-hidden pointer-events-none flex justify-center">
-                <div class="w-[800px] h-1 bg-sky-400/50 shadow-[0_0_20px_rgba(56,189,248,0.5)] animate-scan-vertical">
+    <main class="flex flex-col relative flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-[90rem] mx-auto w-full gap-10 z-10">
+        
+        <!-- ========================================== -->
+        <!-- 1. DASHBOARD UTAMA                         -->
+        <!-- ========================================== -->
+        <section id="status-utama" class="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-32">
+
+            <!-- KARTU IDENTITAS -->
+            <div class="lg:col-span-8 bento-card p-8 md:p-12 relative overflow-hidden flex flex-col justify-between group">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-red-400/20 rounded-full blur-[80px] transition-colors duration-700 pointer-events-none" id="glow-status"></div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+                    <div class="flex items-center gap-6">
+                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/50 flex items-center justify-center text-5xl flex-shrink-0">👨‍🎓</div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Ruang Kerja Personal</p>
+                            <h1 id="dash-nama" class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">Memuat...</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-200/60 shadow-sm flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terakhir Dipindai</p>
+                            <p id="dash-last-seen" class="text-xs font-bold text-slate-700 mt-0.5">Hari ini, 14:30 WIB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-slate-200/50 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Kesimpulan Kondisi Matamu</p>
+                        <p class="text-slate-400 text-sm font-medium max-w-md">Dari foto terakhir yang dianalisis, matamu kelihatan cukup lelah. Jangan lupa ambil jeda sebentar dari layar, ya.</p>
+                    </div>
+                    
+                    <div class="px-8 py-4 bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-[2rem] shadow-[0_10px_30px_rgba(239,68,68,0.15)] flex items-center gap-4 group-hover:scale-105 transition-transform duration-500">
+                        <span class="w-4 h-4 rounded-full bg-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)]"></span>
+                        <span id="dash-status" class="text-2xl md:text-3xl font-black text-red-600 uppercase tracking-[0.1em]">TERINDIKASI LELAH</span>
+                    </div>
                 </div>
             </div>
-            <div
-                class="glass-pill rounded-full px-8 py-2.5 mb-12 text-xs md:text-sm font-bold tracking-[0.2em] text-slate-500 uppercase shadow-sm">
-                TELKOM UNIVERSITY PURWOKERTO</div>
-            <h1
-                class="text-[4rem] md:text-[7rem] lg:text-[9rem] font-black tracking-tighter mb-4 leading-none flex flex-col md:flex-row gap-2 md:gap-6">
-                <span class="text-[#002D5B]">VISAGE</span><span class="text-gradient">METRICS</span></h1>
-            <h2 class="text-2xl md:text-4xl font-light text-slate-500 tracking-wider mb-8 max-w-3xl">Biometric
-                Intelligence for <span class="font-bold text-[#002D5B]">Visual Fatigue Monitoring</span></h2>
-            <p class="text-base md:text-lg text-slate-500 leading-relaxed max-w-3xl mx-auto mb-16 font-medium">Sistem
-                analisis cerdas berbasis <span class="text-sky-600 font-bold">Deep Learning</span> yang mendeteksi
-                tingkat kelelahan kognitif melalui ekstraksi fitur biometrik mata secara presisi langsung dari unggahan
-                foto Anda.</p>
-            <a href="#problem"
-                class="w-14 h-14 rounded-full border border-sky-200 bg-white flex items-center justify-center hover:bg-sky-50 hover:border-sky-300 transition-all animate-bounce shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
+
+            <!-- METRIK: TITIK KRITIS EAR -->
+            <div class="lg:col-span-4 bento-card p-8 md:p-10 flex flex-col relative overflow-hidden" id="statistik">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-400/10 rounded-full blur-[50px] pointer-events-none"></div>
+                <div class="w-14 h-14 bg-orange-50/80 text-orange-500 rounded-2xl flex items-center justify-center mb-6 text-2xl border border-orange-100 shadow-sm relative z-10">⚠️</div>
+                <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-2 relative z-10">Titik Kritis EAR</h3>
+                <div class="flex items-end gap-2 mb-4 relative z-10">
+                    <span class="text-6xl font-black text-slate-800 tracking-tighter">0.18</span>
+                </div>
+                <p class="text-sm font-medium text-slate-500 flex-grow relative z-10">Bukaan mata (EAR) Anda sempat menyentuh titik terendah ini pada pemindaian terakhir.</p>
+                <div class="mt-4 px-4 py-2 bg-white/80 rounded-xl border border-slate-100 text-xs font-bold text-slate-500 text-center relative z-10 shadow-sm">
+                    Ambang Batas Normal: > 0.22
+                </div>
+            </div>
+
+            <!-- METRIK: RATA-RATA EAR -->
+            <div class="lg:col-span-4 bento-card p-8 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-sky-50 text-sky-500 rounded-xl flex items-center justify-center text-xl border border-sky-100">👁️</div>
+                        <span class="px-3 py-1 bg-white border border-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-sm">Minggu Ini</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">Rata-Rata EAR</h3>
+                    <span class="text-4xl font-black text-slate-800">0.24</span>
+                </div>
+                <div class="mt-6 w-full h-2 bg-slate-200/50 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-sky-400 to-blue-500 w-[60%] rounded-full shadow-[0_0_10px_rgba(56,189,248,0.5)]"></div>
+                </div>
+            </div>
+
+            <!-- METRIK: TOTAL RIWAYAT -->
+            <div class="lg:col-span-4 bento-card p-8 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center text-xl border border-emerald-100">📊</div>
+                        <span class="px-3 py-1 bg-white border border-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-sm">Total Riwayat</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">Gambar Dianalisis</h3>
+                    <span class="text-4xl font-black text-slate-800">12 <span class="text-lg text-slate-400 font-bold">Foto</span></span>
+                </div>
+                <p class="mt-6 text-xs font-medium text-slate-500">Jumlah total gambar wajah yang telah diproses oleh sistem.</p>
+            </div>
+
+            <!-- AKSI CEPAT: UNGGAH FOTO -->
+            <a href="sistem.html" class="lg:col-span-4 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group hover:shadow-[0_20px_50px_rgba(14,165,233,0.4)] hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col justify-center min-h-[200px] border border-sky-400">
+                <div class="absolute -right-8 -bottom-8 opacity-20 group-hover:scale-125 group-hover:rotate-12 transition-all duration-700">
+                    <svg class="w-56 h-56" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                </div>
+                
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg mb-4 backdrop-blur-sm">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-white">Image Processing</span>
+                    </div>
+                    
+                    <h3 class="text-3xl font-black mb-2 tracking-tight drop-shadow-md">Analisis Mata</h3>
+                    <p class="text-sky-100 text-xs font-medium leading-relaxed mb-6 max-w-[80%]">Unggah foto wajah Anda untuk memproses dan mengekstraksi nilai Eye Aspect Ratio (EAR).</p>
+                    
+                    <div class="inline-flex items-center justify-center gap-3 bg-white text-blue-600 px-6 py-4 rounded-xl font-black tracking-widest text-xs uppercase group-hover:bg-slate-50 group-hover:text-blue-700 transition-colors shadow-lg shadow-black/10">
+                        UNGGAH FOTO <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg>
+                    </div>
+                </div>
             </a>
         </section>
 
-        <section id="problem"
-            class="min-h-screen flex items-center justify-center px-6 lg:px-16 py-32 relative z-10 bg-gradient-to-b from-transparent via-red-50/40 to-transparent overflow-hidden">
-            <div class="flex flex-col lg:flex-row items-center max-w-[90rem] mx-auto w-full gap-10 lg:gap-20">
-                <div
-                    class="order-2 lg:order-1 w-full lg:w-1/2 flex justify-center items-center relative h-[500px] lg:h-[750px]">
-                    <div
-                        class="absolute aspect-square h-[60%] lg:h-[70%] bg-red-400/10 rounded-full blur-[70px] pointer-events-none z-0">
-                    </div>
-                    <div
-                        class="absolute aspect-square h-[65%] lg:h-[75%] rounded-full border-[5px] border-red-400/30 animate-radar-spin opacity-50 z-0">
-                    </div>
-                    <div
-                        class="absolute aspect-square h-[55%] lg:h-[65%] border-[3px] border-red-300/60 rounded-full z-0">
-                    </div>
-                    <div class="absolute aspect-square h-[50%] lg:h-[60%] border-2 border-red-400/70 rounded-full animate-ping z-0"
-                        style="animation-duration: 3.5s;"></div>
-                    <div
-                        class="absolute top-[18%] lg:top-[12%] text-red-500 font-black text-3xl lg:text-4xl tracking-[0.3em] uppercase drop-shadow-md z-20">
-                        RED ALERT</div>
-                    <div
-                        class="absolute right-[5%] lg:-right-[5%] bg-white/95 border border-red-200 px-6 py-4 rounded-2xl text-red-600 font-black text-lg lg:text-xl tracking-widest shadow-[0_20px_40px_rgba(239,68,68,0.18)] z-30 transform translate-y-[15%] text-center uppercase animate-pulse-warning backdrop-blur-md">
-                        FATIGUE<br>DETECTED</div>
-                    <img src="../../assets/img/Animasi%201.png" alt="Karakter Membaca Lelah"
-                        class="h-[80%] lg:h-[100%] w-auto object-contain relative z-10 animate-float-large drop-shadow-[0_25px_60px_rgba(239,68,68,0.3)]">
+        <!-- ========================================== -->
+        <!-- 2. RIWAYAT DETEKSI                         -->
+        <!-- ========================================== -->
+        <section id="riwayat" class="bento-card p-8 md:p-12 scroll-mt-32">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">Riwayat Pemindaian Terakhir</h2>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Rekam jejak nilai EAR dari foto yang Anda unggah.</p>
                 </div>
-                <div class="order-1 lg:order-2 w-full lg:w-1/2 space-y-10">
-                    <div>
-                        <span class="text-red-500 font-bold tracking-widest text-sm uppercase">Identifikasi
-                            Masalah</span>
-                        <h2
-                            class="text-5xl md:text-6xl lg:text-7xl font-extrabold mt-4 mb-6 tracking-tight leading-tight text-slate-800">
-                            Ancaman Laten:<br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-500">Digital
-                                Eye Strain</span></h2>
-                        <div class="w-24 h-2 bg-red-500 rounded-full mb-8 shadow-sm"></div>
-                    </div>
-                    <div
-                        class="glass-card p-8 md:p-10 rounded-[2rem] transform hover:-translate-x-2 hover:border-red-300 transition duration-500">
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div
-                                class="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 text-3xl shadow-sm">
-                                👁️</div>
-                            <div>
-                                <h3 class="text-2xl font-bold mb-3 text-slate-800">Computer Vision Syndrome</h3>
-                                <p class="text-slate-500 text-base lg:text-lg leading-relaxed font-medium">Paparan layar
-                                    perangkat secara terus-menerus memicu ketegangan otot siliaris. Bermanifestasi
-                                    secara fisik melalui <strong class="text-red-500">penyempitan bukaan kelopak
-                                        mata</strong> secara tidak sadar sebagai indikator utama kelelahan.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="glass-card p-8 md:p-10 rounded-[2rem] transform hover:-translate-x-2 hover:border-purple-300 transition duration-500">
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div
-                                class="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center flex-shrink-0 text-3xl shadow-sm">
-                                🧠</div>
-                            <div>
-                                <h3 class="text-2xl font-bold mb-3 text-slate-800">Degradasi Performa Kognitif</h3>
-                                <p class="text-slate-500 text-base lg:text-lg leading-relaxed font-medium">Kelelahan
-                                    visual berkorelasi langsung dengan lonjakan <strong
-                                        class="text-purple-500">Cognitive Load</strong>. Mahasiswa mengalami penurunan
-                                    kecepatan memproses informasi.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <a href="#" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-sky-600 transition-colors shadow-sm">
+                    Lihat Semua Riwayat
+                </a>
+            </div>
+
+            <div class="overflow-x-auto pb-4">
+                <table class="w-full text-left border-collapse min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest w-1/3">Tanggal & Waktu Analisis</th>
+                            <th class="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest w-1/3">Nilai EAR Terdeteksi</th>
+                            <th class="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest w-1/3">Status Diagnosis</th>
+                        </tr>
+                    </thead>
+                    <tbody id="histori-table-body" class="text-sm font-medium text-slate-600">
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-4 font-bold text-slate-700">Hari ini, 14:30 WIB</td>
+                            <td class="py-4 px-4 font-mono text-slate-500">0.21</td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-100 text-[10px] font-black text-red-600 rounded-lg uppercase tracking-widest">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Lelah
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-4 font-bold text-slate-700">Kemarin, 19:15 WIB</td>
+                            <td class="py-4 px-4 font-mono text-slate-500">0.19</td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-100 text-[10px] font-black text-red-600 rounded-lg uppercase tracking-widest">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Lelah
+                                </span>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-4 font-bold text-slate-700">Kemarin, 09:00 WIB</td>
+                            <td class="py-4 px-4 font-mono text-slate-500">0.26</td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 text-[10px] font-black text-emerald-600 rounded-lg uppercase tracking-widest">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Optimal
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section id="solution"
-            class="min-h-screen flex items-center justify-center px-6 lg:px-16 py-32 relative z-10 bg-gradient-to-b from-transparent via-sky-50/40 to-transparent">
-            <div class="max-w-[90rem] mx-auto w-full text-center">
-                <div class="mb-20">
-                    <span class="text-sky-600 font-bold tracking-widest text-sm uppercase">Solusi Arsitektural</span>
-                    <h2 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6 text-slate-800">Manajemen <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-600">Cerdas</span>
-                        Lingkungan Belajar</h2>
-                    <p class="text-slate-500 text-lg lg:text-xl max-w-4xl mx-auto font-medium">Setiap fluktuasi tingkat
-                        fokus mahasiswa adalah data berharga. Visage Metrics mengubah sinyal biometrik tersebut menjadi
-                        metrik strategis.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    <div
-                        class="glass-card p-12 rounded-[2.5rem] text-left hover:border-sky-300 hover:shadow-2xl transition duration-300 group bg-white">
-                        <div
-                            class="w-20 h-20 bg-sky-50 rounded-[2rem] flex items-center justify-center mb-8 border border-sky-100 group-hover:scale-110 transition-transform">
-                            <svg class="w-10 h-10 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Instant Image Analysis</h3>
-                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Analisis fitur wajah otomatis
-                            melalui unggahan foto untuk mengukur <span class="text-[#002D5B] font-semibold">Eye Aspect
-                                Ratio (EAR)</span> dan klasifikasi tekstur secara akurat tanpa transmisi data ke server.
+        <!-- ========================================== -->
+        <!-- 3. SECTION ASISTEN AI                      -->
+        <!-- ========================================== -->
+        <section id="asisten" class="bento-card relative z-10 overflow-hidden w-full scroll-mt-32">
+            <div class="flex flex-col md:flex-row items-center">
+                
+                <div class="w-full md:w-5/12 relative flex justify-center items-center h-[400px] bg-slate-50/50 border-r border-slate-100/50">
+                    <div class="absolute w-[250px] h-[250px] bg-indigo-400/20 rounded-full blur-[80px] pointer-events-none"></div>
+                    <img src="../../assets/img/Robot%20Dokter.png" alt="Dr. Visage AI Robot Dokter" class="h-[90%] w-auto object-contain relative z-10 animate-float-large drop-shadow-[0_20px_50px_rgba(56,189,248,0.25)]">
+                    <div class="absolute bottom-[10%] right-[10%] bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl shadow-xl border border-slate-100 z-20 animate-pulse-slow">
+                        <p class="text-xs font-bold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            "Butuh relaksasi mata?"
                         </p>
                     </div>
-                    <div
-                        class="glass-card p-12 rounded-[2.5rem] text-left hover:border-indigo-300 hover:shadow-2xl transition duration-300 group bg-white">
-                        <div
-                            class="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-8 border border-indigo-100 group-hover:scale-110 transition-transform">
-                            <svg class="w-10 h-10 text-indigo-500" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Analisis Metrik</h3>
-                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Agregasi data tingkat kelelahan
-                            individu menjadi metrik komprehensif (Dashboard) untuk fasilitas perpustakaan.</p>
-                    </div>
-                    <div
-                        class="glass-card p-12 rounded-[2.5rem] text-left hover:border-emerald-300 hover:shadow-2xl transition duration-300 group bg-white">
-                        <div
-                            class="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-8 border border-emerald-100 group-hover:scale-110 transition-transform">
-                            <svg class="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Validasi & Mitigasi</h3>
-                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Verifikasi tingkat kelelahan
-                            secara objektif untuk memberikan rekomendasi pemulihan tepat waktu sebelum mencapai kondisi
-                            <span class="text-[#002D5B] font-semibold">burnout</span> ekstrem.</p>
-                    </div>
                 </div>
-            </div>
-        </section>
 
-        <section id="asisten" class="py-32 relative z-10 bg-gradient-to-b from-transparent to-white overflow-hidden">
-            <div class="max-w-[90rem] mx-auto px-6 lg:px-16 flex flex-col md:flex-row items-center gap-16">
-                <div class="w-full md:w-1/2 relative flex justify-center items-center h-[500px] lg:h-[700px]">
-                    <div
-                        class="absolute w-[350px] h-[350px] lg:w-[500px] lg:h-[500px] bg-sky-400/20 rounded-full blur-[100px] pointer-events-none">
+                <div class="w-full md:w-7/12 p-10 md:p-16 text-center md:text-left z-20">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-6 shadow-sm">
+                        <span class="text-lg">✨</span> Teman Relaksasi Matamu
                     </div>
-                    <img src="../../assets/img/Robot%20Dokter.png" alt="Dr. Visage AI Robot Dokter"
-                        class="h-[100%] lg:h-[110%] w-auto object-contain relative z-10 animate-float-large drop-shadow-[0_20px_50px_rgba(56,189,248,0.25)]">
-                </div>
-                <div class="w-full md:w-1/2 text-center md:text-left z-20">
-                    <div
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold uppercase tracking-widest mb-6">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Fitur Baru
+                    
+                    <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-4 leading-tight">Mata Mulai Perih?<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">Mari Rehat Sejenak.</span></h2>
+                    
+                    <p class="text-slate-500 text-base leading-relaxed font-medium mb-8">Dr. Visage bukan sekadar bot. Ia adalah asisten cerdas yang siap mendengarkan keluhan matamu dan memberikan panduan istirahat praktis supaya kamu bisa fokus lagi.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left mb-10">
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition hover:border-indigo-200 group cursor-default">
+                            <div class="w-12 h-12 bg-white text-indigo-600 rounded-xl flex items-center justify-center mb-4 border border-slate-200 shadow-sm group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <h4 class="font-black text-slate-800 mb-2">Solusi Personal</h4>
+                            <p class="text-xs text-slate-500 font-medium leading-relaxed">Dapat saran istirahat yang disesuaikan langsung dengan seberapa lelah matamu hari ini.</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition hover:border-purple-200 group cursor-default">
+                            <div class="w-12 h-12 bg-white text-purple-600 rounded-xl flex items-center justify-center mb-4 border border-slate-200 shadow-sm group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                            </div>
+                            <h4 class="font-black text-slate-800 mb-2">Panduan Suara</h4>
+                            <p class="text-xs text-slate-500 font-medium leading-relaxed">Tutup matamu dan dengarkan langkah relaksasi yang dibacakan otomatis oleh sistem.</p>
+                        </div>
                     </div>
-                    <h2 class="text-4xl md:text-5xl font-black text-slate-800 mb-6 leading-tight">Bertemu
-                        dengan<br><span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-600">Dr. Visage
-                            AI</span></h2>
-                    <p class="text-slate-500 text-lg leading-relaxed font-medium mb-8">Bukan sekadar memantau kelelahan,
-                        sistem kami kini dilengkapi dengan <strong>Chatbot Medis AI Cerdas</strong>. Ditenagai oleh
-                        Google Gemini API, Dr. Visage dapat memberikan rekomendasi pemulihan visual secara real-time.
-                    </p>
-                    <ul class="space-y-4 mb-10 text-slate-600 font-medium">
-                        <li class="flex items-center gap-3 justify-center md:justify-start">
-                            <div class="p-1 bg-sky-100 text-sky-600 rounded-md"><svg class="w-4 h-4" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg></div> Analisis Personal Berdasarkan Skor EAR Anda
-                        </li>
-                        <li class="flex items-center gap-3 justify-center md:justify-start">
-                            <div class="p-1 bg-sky-100 text-sky-600 rounded-md"><svg class="w-4 h-4" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg></div> Output Suara (Text-to-Speech) Otomatis
-                        </li>
-                    </ul>
-                    <a href="asisten_visage.html" id="cta-asisten-btn"
-                        class="relative z-50 cursor-pointer inline-flex items-center gap-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-600 font-bold px-8 py-4 rounded-xl transition-all shadow-sm hover:shadow-md">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
-                        Coba Tanya Dr. Visage Sekarang
+
+                    <a href="asisten_visage.html" class="inline-flex items-center justify-center w-full sm:w-auto gap-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black px-10 py-5 rounded-2xl transition-all shadow-[0_15px_30px_rgba(79,70,229,0.3)] hover:shadow-[0_20px_40px_rgba(79,70,229,0.4)] hover:-translate-y-1 tracking-widest text-xs uppercase border border-indigo-400/50">
+                        Mulai Konsultasi Gratis
+                        <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg>
                     </a>
                 </div>
             </div>
         </section>
 
-        <section
-            class="min-h-screen flex items-center justify-center px-6 lg:px-16 py-20 relative z-10 bg-gradient-to-b from-white to-sky-50/50 overflow-hidden">
-            <div
-                class="absolute bottom-0 left-0 w-[800px] h-[800px] bg-sky-400/10 rounded-full blur-[120px] pointer-events-none">
-            </div>
-            <div
-                class="flex flex-col md:flex-row items-center justify-between gap-10 max-w-[90rem] mx-auto w-full h-full relative z-10">
-                <div class="w-full md:w-1/2 text-left flex flex-col justify-center z-20">
-                    <span class="text-sky-500 font-bold tracking-[0.2em] text-sm uppercase mb-4">Akses Core
-                        Engine</span>
-                    <h2
-                        class="text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold leading-[1.05] tracking-tight mb-8 text-[#002D5B]">
-                        Mulai Deteksi Dini,<br><span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-600">Produktivitas
-                            Terjaga!</span></h2>
-                    <p class="text-slate-500 text-xl lg:text-2xl mb-12 font-medium leading-relaxed max-w-2xl">
-                        Bergabunglah dalam ekosistem pengujian sistem Visage Metrics. Metrik Anda mendefinisikan standar
-                        kenyamanan lingkungan akademik masa depan.</p>
-
-                    <a href="form_pengguna.html" id="cta-auth-btn"
-                        class="inline-flex items-center gap-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black px-14 py-6 rounded-full transition-all hover:scale-105 shadow-[0_15px_30px_rgba(14,165,233,0.3)] text-xl tracking-[0.2em] self-start">
-                        AKSES SISTEM
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7-7m7-7H3" />
-                        </svg>
-                    </a>
-                </div>
-                <div class="w-full md:w-1/2 flex justify-end items-end h-[500px] lg:h-[800px] relative z-10">
-                    <img src="../../assets/img/Animasi%202.png" alt="Karakter Menyapa"
-                        class="h-full w-auto object-contain drop-shadow-2xl animate-float-large">
-                </div>
-            </div>
-        </section>
     </main>
 
-    <footer
-        class="py-8 text-center text-slate-500 text-[10px] tracking-[0.5em] uppercase bg-sky-50/50 relative z-10 font-bold">
+    <footer class="py-8 text-center text-slate-500 text-[10px] tracking-[0.5em] uppercase font-bold mt-4 relative z-10 border-t border-slate-200/50 bg-white/30 backdrop-blur-sm">
         &copy; 2026 VISAGE METRICS • RESEARCH & DEVELOPMENT • UNIT TELKOM UNIVERSITY PURWOKERTO
     </footer>
 
-    <div id="profile-backdrop"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0">
-    </div>
+    <!-- ========================================== -->
+    <!-- MODAL PROFIL & KEAMANAN AKUN               -->
+    <!-- ========================================== -->
+    <div id="profile-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0"></div>
 
-    <div id="profile-sidebar"
-        class="fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white/95 backdrop-blur-3xl border-l border-slate-200 z-[70] transform translate-x-full transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.1)] flex flex-col">
+    <div id="profile-sidebar" class="fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white/95 backdrop-blur-3xl border-l border-slate-200 z-[70] transform translate-x-full transition-transform duration-500 ease-in-out shadow-[-20px_0_50px_rgba(0,0,0,0.1)] flex flex-col">
         <div class="flex justify-between items-center p-6 border-b border-slate-200 bg-slate-50/50">
-            <h2 class="text-sm font-black text-sky-600 tracking-[0.2em] uppercase flex items-center gap-3"><span
-                    class="p-2 bg-sky-50 rounded-lg text-xl border border-sky-100">👨‍🎓</span> User Settings</h2>
-            <button id="close-profile-btn"
-                class="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full border border-slate-200 hover:border-red-200 hover:bg-red-50 shadow-sm">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
+            <h2 class="text-sm font-black text-sky-600 tracking-[0.2em] uppercase flex items-center gap-3">
+                <span class="p-2 bg-sky-50 rounded-lg text-xl border border-sky-100">⚙️</span> Pengaturan Profil
+            </h2>
+            <button id="close-profile-btn" class="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full border border-slate-200 hover:border-red-200 hover:bg-red-50 shadow-sm">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
-        <div class="flex-grow overflow-y-auto p-8 space-y-10 no-scrollbar">
+        <div class="flex-grow overflow-y-auto p-8 space-y-8 no-scrollbar">
             <div class="text-center relative">
-                <div class="absolute inset-0 bg-sky-100/50 blur-[40px] rounded-full"></div>
-                <div
-                    class="w-28 h-28 mx-auto bg-white rounded-full border-2 border-dashed border-sky-300 flex items-center justify-center text-5xl shadow-md mb-6 relative z-10">
-                    👨‍🎓</div>
+                <div class="absolute inset-0 bg-sky-100/50 blur-[40px] rounded-full pointer-events-none"></div>
+                <div class="w-28 h-28 mx-auto bg-white rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/50 flex items-center justify-center text-5xl mb-6 relative z-10">👨‍🎓</div>
                 <h3 id="sidebar-nama" class="text-2xl font-extrabold text-slate-800 tracking-tight">Memuat...</h3>
-                <p id="sidebar-nim" class="text-sky-600 font-mono text-xs mt-2 tracking-widest uppercase font-bold">ID:
-                    ...</p>
+                <p id="sidebar-nim" class="text-sky-600 font-bold text-xs mt-2 tracking-widest uppercase">Mahasiswa Aktif</p>
                 <div class="mt-6 flex justify-center gap-3">
-                    <span
-                        class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-200 tracking-widest uppercase">Status:
-                        Optimal</span>
-                    <span id="sidebar-prodi"
-                        class="px-4 py-1.5 bg-sky-50 text-sky-600 text-[10px] font-bold rounded-full border border-sky-200 tracking-widest uppercase">...</span>
+                    <span class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-200 tracking-widest uppercase">Semester 6</span>
+                    <span id="sidebar-prodi" class="px-4 py-1.5 bg-sky-50 text-sky-600 text-[10px] font-bold rounded-full border border-sky-200 tracking-widest uppercase">S1 Sains Data</span>
                 </div>
             </div>
 
             <form id="profileForm" class="space-y-6">
+                <!-- Section 1: Data Diri -->
                 <div class="space-y-4">
-                    <h4
-                        class="text-xs font-bold text-slate-400 tracking-[0.2em] uppercase border-b border-slate-100 pb-2">
-                        Data Diri & Akademik</h4>
+                    <h4 class="text-xs font-bold text-slate-400 tracking-[0.2em] uppercase border-b border-slate-100 pb-2">Data Diri & Akademik</h4>
 
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Email (Tidak dapat
-                            diubah)</label>
-                        <input type="text" id="edit-email" readonly
-                            class="w-full px-5 py-3 bg-slate-100 text-slate-400 rounded-xl outline-none cursor-not-allowed border border-slate-200 text-sm font-medium">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Email (Tidak dapat diubah)</label>
+                        <input type="text" id="edit-email" readonly class="w-full px-5 py-3 bg-slate-100 text-slate-400 rounded-xl outline-none cursor-not-allowed border border-slate-200 text-sm font-medium">
                     </div>
 
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Nama Lengkap</label>
-                        <input type="text" id="edit-nama" required
-                            class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                        <input type="text" id="edit-nama" required class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
                     </div>
 
                     <div class="flex gap-4">
                         <div class="w-1/2">
                             <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">NIM</label>
-                            <input type="text" id="edit-nim" required
-                                class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                            <input type="text" id="edit-nim" required class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
                         </div>
                         <div class="w-1/2">
-                            <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Jenis
-                                Kelamin</label>
-                            <select id="edit-jk" required
-                                class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Jenis Kelamin</label>
+                            <select id="edit-jk" required class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
                                 <option value="Laki-laki">Laki-laki</option>
                                 <option value="Perempuan">Perempuan</option>
                             </select>
@@ -421,8 +382,7 @@
 
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Program Studi</label>
-                        <select id="edit-prodi" required
-                            class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                        <select id="edit-prodi" required class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
                             <option value="S1 Sains Data">S1 Sains Data</option>
                             <option value="S1 Rekayasa Perangkat Lunak">S1 RPL</option>
                             <option value="S1 Teknik Informatika">S1 Teknik Informatika</option>
@@ -431,27 +391,73 @@
                     </div>
                 </div>
 
+                <!-- Section 2: Keamanan Akun (Ganti Sandi) -->
+                <div class="space-y-4 pt-4 mt-6 border-t border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-400 tracking-[0.2em] uppercase border-b border-slate-100 pb-2">Keamanan Akun</h4>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Kata Sandi Saat Ini</label>
+                        <input type="password" id="edit-old-password" placeholder="Kosongkan jika tidak ingin ganti sandi" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Kata Sandi Baru</label>
+                        <input type="password" id="edit-new-password" placeholder="••••••••" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Konfirmasi Sandi Baru</label>
+                        <input type="password" id="edit-confirm-password" placeholder="••••••••" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-slate-800 text-sm transition font-medium">
+                    </div>
+                </div>
+
                 <p id="profile-msg" class="hidden text-xs font-bold text-center py-2 rounded-lg border"></p>
 
-                <button type="submit" id="btn-save-profile"
-                    class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl shadow-[0_10px_20px_rgba(14,165,233,0.3)] transition-all tracking-[0.2em] text-xs uppercase mt-4 border border-sky-400">
+                <button type="submit" id="btn-save-profile" class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl shadow-[0_10px_20px_rgba(14,165,233,0.3)] transition-all tracking-[0.2em] text-xs uppercase mt-6 border border-sky-400">
                     Simpan Perubahan
                 </button>
             </form>
         </div>
 
         <div class="p-6 border-t border-slate-200 bg-slate-50/50">
-            <button id="btn-logout"
-                class="w-full py-4 bg-white hover:bg-red-50 border border-red-200 text-red-500 rounded-xl font-bold transition-all tracking-[0.2em] text-xs uppercase flex justify-center items-center gap-3 shadow-sm hover:border-red-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+            <button id="btn-logout" class="w-full py-4 bg-white hover:bg-red-50 border border-red-200 text-red-500 rounded-xl font-bold transition-all tracking-[0.2em] text-xs uppercase flex justify-center items-center gap-3 shadow-sm hover:border-red-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 Logout Sistem
             </button>
         </div>
     </div>
+
+    <!-- ========================================== -->
+    <!-- SCRIPT KHUSUS UI SIDEBAR (ANTI-MACET 100%) -->
+    <!-- ========================================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnProfile = document.getElementById('nav-profile-btn');
+            const backdrop = document.getElementById('profile-backdrop');
+            const sidebar = document.getElementById('profile-sidebar');
+            const btnClose = document.getElementById('close-profile-btn');
+
+            const toggleSidebar = (e) => {
+                if (e) e.preventDefault(); 
+                
+                if (sidebar.classList.contains('translate-x-full')) {
+                    backdrop.classList.remove('hidden');
+                    setTimeout(() => {
+                        backdrop.classList.remove('opacity-0');
+                        sidebar.classList.remove('translate-x-full');
+                    }, 10);
+                } else {
+                    backdrop.classList.add('opacity-0');
+                    sidebar.classList.add('translate-x-full');
+                    setTimeout(() => backdrop.classList.add('hidden'), 500);
+                }
+            };
+
+            if (btnProfile) btnProfile.addEventListener('click', toggleSidebar);
+            if (btnClose) btnClose.addEventListener('click', toggleSidebar);
+            if (backdrop) backdrop.addEventListener('click', toggleSidebar);
+        });
+    </script>
 </body>
 
 </html>

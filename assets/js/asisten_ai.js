@@ -1,22 +1,29 @@
-// File: assets/js/asisten_ai.js
+// IMPORT API KEY DARI FILE RAHASIA
+import { GEMINI_API_KEY } from 'config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // ==========================================
-    // 1. KONFIGURASI API (Dengan Fallback 'latest')
+    // 1. KONFIGURASI API & INSTRUKSI SISTEM KETAT
     // ==========================================
-    const API_KEY = "AIzaSyBN5jHuxea67wSEKjG8nLy6aZiPA5elfCw"; 
     
+    // Fallback Endpoint: Jika model preview mati, sistem akan turun ke model stabil
     const ENDPOINTS = [
-        // Prioritas Utama: Gemini 3 Flash Preview
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`,
-        
-        // Cadangan 1: Gemini 2.5 Flash (Stabil & Cepat)
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-        
-        // Cadangan 2: Gemini 2.0 Flash (Paling Stabil buat benteng terakhir)
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        // Backup paling aman jika model terbaru error/dihapus google:
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
     ];
+
+    // INSTRUKSI KETAT (GUARDRAIL) UNTUK AI
+    const SYSTEM_INSTRUCTION = `Anda adalah Dr. Visage AI, asisten medis virtual spesialis kesehatan mata dari platform Visage Metrics.
+ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
+1. Anda HANYA diizinkan membahas topik seputar kesehatan mata, kelelahan mata (Digital Eye Strain), penglihatan, dan ergonomi layar.
+2. Jika pengguna bertanya tentang topik apa pun di luar kesehatan mata (seperti politik, coding, resep masakan, cuaca, matematika, dll), TOLAK dengan sopan dan arahkan kembali ke topik kesehatan mata. Gunakan format jawaban: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual."
+3. Jawab maksimal dalam 2 paragraf pendek.
+4. Gunakan bahasa Indonesia yang profesional, empatik, dan mudah dipahami mahasiswa.
+5. Jangan pernah menggunakan simbol asterisk (*) atau markdown tebal dalam respons Anda, karena akan dibaca oleh sistem Text-to-Speech.`;
 
     // ==========================================
     // 2. REFERENSI ELEMEN DOM
@@ -72,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 bubbleContent.classList.remove('hidden');
                 typingAnim.classList.add('hidden');
                 bubbleContent.innerHTML = text;
-                bubbleContent.scrollTop = 0; // Reset scroll ke paling atas
+                bubbleContent.scrollTop = 0; 
             }
 
             bubbleContainer.classList.remove('bubble-hidden');
@@ -81,17 +88,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 5. FUNGSI FETCH API GEMINI
+    // 5. FUNGSI FILTER OOT & FETCH API GEMINI
     // ==========================================
+    
+    // Kata Kunci Sederhana Untuk Pengecekan Awal
+    const eyeKeywords = ["mata", "perih", "lelah", "kabur", "silau", "pusing", "layar", "kacamata", "tidur", "istirahat", "rabun", "ear", "visage"];
+
     async function getAIResponse(prompt) {
-        const context = "Kamu Dr. Visage, asisten medis AI dari Telkom Purwokerto. Jawab singkat maksimal 2 paragraf, ramah, bahasa Indonesia, tanpa simbol bintang (*). Pertanyaan: " + prompt;
+        
+        // Filter Lapis 1: Cegah API Call jika pertanyaannya sangat jelas di luar topik
+        const isRelated = eyeKeywords.some(keyword => prompt.toLowerCase().includes(keyword));
+        
+        // Kita gabungkan instruksi dengan pertanyaan user
+        // Filter Lapis 2 akan dilakukan langsung oleh model Gemini berdasarkan instruksi ini
+        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nPertanyaan Pengguna: "${prompt}"`;
         
         for(let url of ENDPOINTS) {
             try {
                 const res = await fetch(url, { 
                     method: "POST", 
                     headers: { "Content-Type": "application/json" }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] }) 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] }) 
                 });
                 
                 if(res.ok) {
@@ -101,13 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if(res.status === 404) {
                     console.warn("Model API tidak ditemukan, mencoba fallback...");
-                    continue; // Coba endpoint berikutnya
+                    continue; 
                 }
             } catch(e) { 
                 console.error("Kesalahan jaringan:", e); 
             }
         }
-        return "Maaf Wisnu, koneksi otak saya ke server pusat terputus. Pastikan kamu terhubung ke jaringan internet yang stabil.";
+        return "Maaf Wisnu, koneksi sistem Dr. Visage ke server pusat sedang terputus. Pastikan Anda terhubung ke jaringan internet.";
     }
 
     // ==========================================

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visage Metrics - Visual Fatigue Monitor</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    animation: {
+                        'blob': 'blob 12s infinite alternate',
+                        'float-large': 'floatLarge 8s ease-in-out infinite',
+                        'scan-vertical': 'scanV 4s linear infinite',
+                        'pulse-warning': 'pulseWarning 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script type="module" src="assets/js/index.js" defer></script>
+    <style>
+        /* Sembunyikan scrollbar untuk slider tapi tetap bisa di-scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Efek truncate untuk teks berita */
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4; 
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-sky-200 min-h-screen flex flex-col relative">
+
+    <div class="bg-cyber"></div>
+    <div class="bg-grid"></div>
+
+    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-sky-400/20 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-400/10 rounded-full blur-[120px] animate-blob pointer-events-none z-[-1]" style="animation-delay: 4s;"></div>
+
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-40 transition-all duration-300" id="navbar">
+        <div class="max-w-[90rem] mx-auto px-6 lg:px-10">
+            <div class="flex justify-between items-center h-24">
+                
+                <a href="#hero" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 flex items-center justify-center text-sky-500 rounded-xl">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 transition-all duration-300 group-hover:scale-110">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <div class="font-black text-xl tracking-[0.2em] text-slate-800 uppercase group-hover:text-sky-600 transition">VISAGE METRICS</div>
+                </a>
+
+                <div class="hidden lg:flex space-x-10 font-bold text-xs tracking-widest uppercase">
+                    <a href="#hero" class="text-sky-600 border-b-2 border-sky-500 pb-1">HOME</a>
+                    <a href="#problem" class="text-slate-500 hover:text-sky-600 transition pb-1">PROBLEM</a>
+                    <a href="#solution" class="text-slate-500 hover:text-sky-600 transition pb-1">SOLUTION</a>
+                    <a href="#asisten" class="text-slate-500 hover:text-sky-600 transition pb-1 relative group">
+                        ASISTEN AI
+                        <span class="absolute -top-3 -right-4 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                    </a>
+                    <a href="#berita" class="text-slate-500 hover:text-sky-600 transition pb-1">FAKTA MEDIS</a>
+                    <a href="#team" class="text-slate-500 hover:text-sky-600 transition pb-1">TEAM</a>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a id="nav-login-btn" href="login.html" class="px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-full font-extrabold text-xs tracking-widest hover:from-sky-400 hover:to-blue-500 transition shadow-lg shadow-sky-500/30 text-center">
+                        LOGIN
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex flex-col relative flex-grow">
+        <!-- 1. HERO SECTION -->
+        <section id="hero" class="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-32 relative z-10 bg-transparent">
+            <div class="absolute inset-0 overflow-hidden pointer-events-none flex justify-center">
+                <div class="w-[800px] h-1 bg-sky-400/50 shadow-[0_0_20px_rgba(56,189,248,0.5)] animate-scan-vertical"></div>
+            </div>
+            <div class="glass-pill rounded-full px-8 py-2.5 mb-12 text-xs md:text-sm font-bold tracking-[0.2em] text-slate-500 uppercase shadow-sm">
+                TELKOM UNIVERSITY PURWOKERTO
+            </div>
+            <h1 class="text-[4rem] md:text-[7rem] lg:text-[9rem] font-black tracking-tighter mb-4 leading-none flex flex-col md:flex-row gap-2 md:gap-6">
+                <span class="text-[#002D5B]">VISAGE</span><span class="text-gradient">METRICS</span>
+            </h1>
+            <h2 class="text-2xl md:text-4xl font-light text-slate-500 tracking-wider mb-8 max-w-3xl">Biometric Intelligence for <span class="font-bold text-[#002D5B]">Visual Fatigue Monitoring</span></h2>
+            <p class="text-base md:text-lg text-slate-500 leading-relaxed max-w-3xl mx-auto mb-16 font-medium">
+                Sistem analisis cerdas berbasis <span class="text-sky-600 font-bold">Deep Learning</span> yang mendeteksi tingkat kelelahan kognitif melalui ekstraksi fitur biometrik mata secara presisi langsung dari unggahan foto Anda.
+            </p>
+            <a href="#problem" class="w-14 h-14 rounded-full border border-sky-200 bg-white flex items-center justify-center hover:bg-sky-50 hover:border-sky-300 transition-all animate-bounce shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+            </a>
+        </section>
+
+        <!-- 2. PROBLEM SECTION -->
+        <section id="problem" class="min-h-screen flex items-center justify-center px-6 lg:px-16 py-32 relative z-10 bg-gradient-to-b from-transparent via-red-50/40 to-transparent overflow-hidden">
+            <div class="flex flex-col lg:flex-row items-center max-w-[90rem] mx-auto w-full gap-10 lg:gap-20">
+                <div class="order-2 lg:order-1 w-full lg:w-1/2 flex justify-center items-center relative h-[500px] lg:h-[750px]">
+                    <div class="absolute aspect-square h-[60%] lg:h-[70%] bg-red-400/10 rounded-full blur-[70px] pointer-events-none z-0"></div>
+                    <div class="absolute aspect-square h-[65%] lg:h-[75%] rounded-full border-[5px] border-red-400/30 animate-radar-spin opacity-50 z-0"></div>
+                    <div class="absolute aspect-square h-[55%] lg:h-[65%] border-[3px] border-red-300/60 rounded-full z-0"></div>
+                    <div class="absolute aspect-square h-[50%] lg:h-[60%] border-2 border-red-400/70 rounded-full animate-ping z-0" style="animation-duration: 3.5s;"></div>
+                    <div class="absolute top-[18%] lg:top-[12%] text-red-500 font-black text-3xl lg:text-4xl tracking-[0.3em] uppercase drop-shadow-md z-20">RED ALERT</div>
+                    <div class="absolute right-[5%] lg:-right-[5%] bg-white/95 border border-red-200 px-6 py-4 rounded-2xl text-red-600 font-black text-lg lg:text-xl tracking-widest shadow-[0_20px_40px_rgba(239,68,68,0.18)] z-30 transform translate-y-[15%] text-center uppercase animate-pulse-warning backdrop-blur-md">FATIGUE<br>DETECTED</div>
+                    <img src="assets/img/Animasi 1.png" alt="Karakter Membaca Lelah" class="h-[80%] lg:h-[100%] w-auto object-contain relative z-10 animate-float-large drop-shadow-[0_25px_60px_rgba(239,68,68,0.3)]">
+                </div>
+                <div class="order-1 lg:order-2 w-full lg:w-1/2 space-y-10">
+                    <div>
+                        <span class="text-red-500 font-bold tracking-widest text-sm uppercase">Identifikasi Masalah</span>
+                        <h2 class="text-5xl md:text-6xl lg:text-7xl font-extrabold mt-4 mb-6 tracking-tight leading-tight text-slate-800">
+                            Ancaman Laten:<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-500">Digital Eye Strain</span>
+                        </h2>
+                        <div class="w-24 h-2 bg-red-500 rounded-full mb-8 shadow-sm"></div>
+                    </div>
+                    <div class="glass-card p-8 md:p-10 rounded-[2rem] transform hover:-translate-x-2 hover:border-red-300 transition duration-500">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 text-3xl shadow-sm">👁️</div>
+                            <div>
+                                <h3 class="text-2xl font-bold mb-3 text-slate-800">Computer Vision Syndrome</h3>
+                                <p class="text-slate-500 text-base lg:text-lg leading-relaxed font-medium">Paparan layar perangkat secara terus-menerus memicu ketegangan otot siliaris. Bermanifestasi secara fisik melalui <strong class="text-red-500">penyempitan bukaan kelopak mata</strong> secara tidak sadar sebagai indikator utama kelelahan.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-8 md:p-10 rounded-[2rem] transform hover:-translate-x-2 hover:border-purple-300 transition duration-500">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center flex-shrink-0 text-3xl shadow-sm">🧠</div>
+                            <div>
+                                <h3 class="text-2xl font-bold mb-3 text-slate-800">Degradasi Performa Kognitif</h3>
+                                <p class="text-slate-500 text-base lg:text-lg leading-relaxed font-medium">Kelelahan visual berkorelasi langsung dengan lonjakan <strong class="text-purple-500">Cognitive Load</strong>. Mahasiswa mengalami penurunan kecepatan memproses informasi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SOLUTION SECTION -->
+        <section id="solution" class="min-h-screen flex items-center justify-center px-6 lg:px-16 py-32 relative z-10 bg-gradient-to-b from-transparent via-sky-50/40 to-white">
+            <div class="max-w-[90rem] mx-auto w-full text-center">
+                <div class="mb-20">
+                    <span class="text-sky-600 font-bold tracking-widest text-sm uppercase">Solusi Arsitektural</span>
+                    <h2 class="text-4xl md:text-6xl font-extrabold mt-4 mb-6 text-slate-800">Manajemen <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-blue-600">Cerdas</span> Lingkungan Belajar</h2>
+                    <p class="text-slate-500 text-lg lg:text-xl max-w-4xl mx-auto font-medium">Setiap fluktuasi tingkat fokus mahasiswa adalah data berharga. Visage Metrics mengubah sinyal biometrik tersebut menjadi metrik strategis.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div class="glass-card p-12 rounded-[2.5rem] text-left hover:border-sky-300 hover:shadow-2xl transition duration-300 group bg-white border border-slate-100 shadow-sm">
+                        <div class="w-20 h-20 bg-sky-50 rounded-[2rem] flex items-center justify-center mb-8 border border-sky-100 group-hover:scale-110 transition-transform">
+                            <svg class="w-10 h-10 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Instant Image Analysis</h3>
+                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Analisis fitur wajah otomatis melalui unggahan foto untuk mengukur <span class="text-[#002D5B] font-semibold">Eye Aspect Ratio (EAR)</span> dan klasifikasi tekstur secara akurat tanpa transmisi data ke server.</p>
+                    </div>
+                    <div class="glass-card p-12 rounded-[2.5rem] text-left hover:border-indigo-300 hover:shadow-2xl transition duration-300 group bg-white border border-slate-100 shadow-sm">
+                        <div class="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-8 border border-indigo-100 group-hover:scale-110 transition-transform">
+                            <svg class="w-10 h-10 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012-2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Analisis Metrik</h3>
+                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Agregasi data tingkat kelelahan individu menjadi metrik komprehensif (Dashboard) untuk fasilitas perpustakaan.</p>
+                    </div>
+                    <div class="glass-card p-12 rounded-[2.5rem] text-left hover:border-emerald-300 hover:shadow-2xl transition duration-300 group bg-white border border-slate-100 shadow-sm">
+                        <div class="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-8 border border-emerald-100 group-hover:scale-110 transition-transform">
+                            <svg class="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-4 text-[#002D5B]">Validasi & Mitigasi</h3>
+                        <p class="text-slate-500 text-lg leading-relaxed font-medium">Verifikasi tingkat kelelahan secara objektif untuk memberikan rekomendasi pemulihan tepat waktu sebelum mencapai kondisi <span class="text-[#002D5B] font-semibold">burnout</span> ekstrem.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ASISTEN AI -->
+        <section id="asisten" class="py-32 relative z-10 bg-white overflow-hidden">
+            <div class="max-w-[90rem] mx-auto px-6 lg:px-16 flex flex-col md:flex-row items-center gap-16">
+                <div class="w-full md:w-1/2 relative flex justify-center items-center h-[500px] lg:h-[700px]">
+                    <div class="absolute w-[350px] h-[350px] lg:w-[500px] lg:h-[500px] bg-sky-400/10 rounded-full blur-[100px] pointer-events-none"></div>
+                    <img src="assets/img/Robot Dokter.png" alt="Dr. Visage AI Robot Dokter" class="h-[100%] lg:h-[110%] w-auto object-contain relative z-10 animate-float-large drop-shadow-[0_20px_50px_rgba(56,189,248,0.25)]">
+                </div>
+                <div class="w-full md:w-1/2 text-center md:text-left z-20">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Asissten AI
+                    </div>
+                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-800 mb-6 leading-tight">Mata Mulai Perih?<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-600">Yuk, Rehat Sejenak.</span></h2>
+                    <p class="text-slate-500 text-lg leading-relaxed font-medium mb-10">Gak perlu nunggu sampai kepala pusing atau layar terasa buram. Kenalin, <strong>Dr. Visage</strong> bukan sekadar bot kaku, tapi 'teman' yang siap dengerin keluhanmu dan ngasih tips relaksasi biar fokus nugasmu balik lagi secara instan.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+                        <div class="p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-md transition hover:border-sky-200">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 border border-indigo-100">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <h4 class="font-black text-slate-800 mb-2">Saran Terasa Personal</h4>
+                            <p class="text-sm text-slate-500 font-medium leading-relaxed">Begitu sistem baca matamu lelah, Dr. Visage langsung ngasih saran istirahat ringan yang paling pas buat kondisimu.</p>
+                        </div>
+                        <div class="p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-md transition hover:border-sky-200">
+                            <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center mb-4 border border-sky-100">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                            </div>
+                            <h4 class="font-black text-slate-800 mb-2">Panduan Suara Praktis</h4>
+                            <p class="text-sm text-slate-500 font-medium leading-relaxed">Mata capek baca? Pejamkan aja. Dr. Visage bakal bacain panduan relaksasinya pelan-pelan langsung buat kamu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. BERITA MEDIS -->
+        <section id="berita" class="flex flex-col justify-center py-24 relative z-10 bg-white overflow-hidden">
+            <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-400/5 rounded-full blur-[100px] pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-red-400/5 rounded-full blur-[80px] pointer-events-none"></div>
+            
+            <div class="max-w-[90rem] mx-auto w-full relative z-10 px-6 lg:px-16">
+                <div class="text-center mb-12">
+                     <span class="text-sky-500 font-bold tracking-[0.2em] text-sm uppercase mb-4 block">Latar Belakang Krisis</span>
+                     <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-800 mb-6">
+                        Ancaman Nyata<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-500">di Balik Layar Kaca</span>
+                     </h2>
+                     <p class="text-slate-500 font-medium max-w-2xl mx-auto text-lg">Mengapa Visage Metrics dibangun? Karena data medis dan lansiran berita global menunjukkan urgensi yang tidak bisa lagi diabaikan.</p>
+                </div>
+            </div>
+
+            <!-- Wadah Slider -->
+            <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 px-6 lg:px-16 no-scrollbar w-full py-4 items-stretch">
+                
+                <!-- Berita 1: Halodoc -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-sky-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-sky-600 uppercase tracking-widest mb-4 bg-sky-50 inline-block px-3 py-1.5 rounded-md self-start border border-sky-100">Halodoc</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-sky-600 transition-colors">"Mata Lelah Akibat Gadget? Atasi Computer Vision Syndrome"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Penggunaan gadget dalam waktu lama dapat menyebabkan mata lelah, kering, dan pandangan kabur. Kenali lebih dalam mengenai gejala dan cara mengatasi Computer Vision Syndrome (CVS).</p>
+                    <a href="https://www.halodoc.com/artikel/mata-lelah-akibat-gadget-atasi-computer-vision-syndrome?srsltid=AfmBOophU_WP6u9Dq-F3Zd4g5WKg35M_bUXlDci9iNbM08N_ejesvA6J%5Cdpcs" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-sky-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 2: Alodokter -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 bg-indigo-50 inline-block px-3 py-1.5 rounded-md self-start border border-indigo-100">Alodokter Komunitas</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-indigo-600 transition-colors">"Kenapa Mudah Mengantuk Termasuk Gejala Mata Lelah?"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Asthenopia atau mata lelah sering kali disertai rasa kantuk yang berat. Hal ini terjadi karena otot mata bekerja ekstra keras saat fokus menatap layar digital dalam durasi yang panjang.</p>
+                    <a href="https://www.alodokter.com/komunitas/topic/kenapa-mudah-mengantuk-termasuk-salah-satu-gejala-mata-lelah--asthenopia-" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-indigo-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 3: Hermina Hospitals -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 bg-emerald-50 inline-block px-3 py-1.5 rounded-md self-start border border-emerald-100">Hermina Hospitals</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-emerald-600 transition-colors">"Dampak Gadget Terhadap Kesehatan Mata Anda"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Paparan cahaya biru dari layar gadget dapat memberikan dampak serius bagi kesehatan mata jangka panjang, memicu ketegangan saraf optik, dan penurunan tajam penglihatan.</p>
+                    <a href="https://herminahospitals.com/id/articles/dampak-gadget-terhadap-kesehatan-mata" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-emerald-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 4: RRI 1 -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-blue-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 bg-blue-50 inline-block px-3 py-1.5 rounded-md self-start border border-blue-100">RRI News</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-blue-600 transition-colors">"Bahaya Layar Gadget Bagi Kesehatan Mata"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Menatap layar dalam waktu lama tanpa istirahat memicu ketegangan mata digital. Fenomena ini semakin banyak dikeluhkan karena tingginya interaksi dengan gawai setiap hari.</p>
+                    <a href="https://rri.co.id/gunung-sitoli/kesehatan/2375895/bahaya-layar-gadget-bagi-kesehatan-mata#google_vignette" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-blue-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 5: RRI 2 -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-cyan-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-4 bg-cyan-50 inline-block px-3 py-1.5 rounded-md self-start border border-cyan-100">RRI News</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-cyan-600 transition-colors">"Keluhan Mata Akibat Gadget Menurunkan Produktivitas"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Tidak hanya berdampak pada penglihatan, kelelahan mata terbukti secara klinis menurunkan tingkat produktivitas dan kualitas hidup, terutama di kalangan pelajar dan pekerja.</p>
+                    <a href="https://rri.co.id/banda-aceh/kesehatan/2344472/keluhan-mata-akibat-gadget-menurunkan-produktivitas-dan-kualitas-hidup" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-cyan-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 6: UNAIR -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-yellow-600 uppercase tracking-widest mb-4 bg-yellow-50 inline-block px-3 py-1.5 rounded-md self-start border border-yellow-200">Universitas Airlangga</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-yellow-600 transition-colors">"Computer Vision Syndrome di Kalangan Mahasiswa"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Era pembelajaran digital memaksa mahasiswa menatap layar lebih lama. CVS kini menjadi tantangan kesehatan utama yang mengancam kefokusan akademik di jenjang perguruan tinggi.</p>
+                    <a href="https://unair.ac.id/computer-vision-syndrome-di-kalangan-mahasiswa-tantangan-kesehatan-mata-di-era-pembelajaran-digital/" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-yellow-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 7: Liputan6 -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-orange-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4 bg-orange-50 inline-block px-3 py-1.5 rounded-md self-start border border-orange-100">Liputan6 Health</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-orange-600 transition-colors">"Asyik Main Gadget Terlalu Lama Bikin Mata Kelelahan"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Aktivitas rekreasi digital yang berlebihan sama berbahayanya dengan beban kerja layar. Mata yang dipaksa fokus berjam-jam akan mengalami kelelahan visual yang signifikan.</p>
+                    <a href="https://www.liputan6.com/health/read/6302382/asyik-main-gadget-saat-libur-lebaran-bila-terlalu-lama-bikin-mata-kelelahan" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-orange-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 8: Halodoc 2 -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-sky-300 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-sky-600 uppercase tracking-widest mb-4 bg-sky-50 inline-block px-3 py-1.5 rounded-md self-start border border-sky-100">Halodoc</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-sky-600 transition-colors">"CVS: Kenali Sindrom Mata Akibat Gadget & Cegah Kini"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Pencegahan lebih baik dari pengobatan. Memahami pemicu sindrom mata lelah adalah langkah pertama untuk melindungi organ penglihatan dari kerusakan di era serba digital.</p>
+                    <a href="https://www.halodoc.com/artikel/cvs-kenali-sindrom-mata-akibat-gadget-cegah-kini" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-sky-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 9: RS Mata Ramata -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-rose-400 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-4 bg-rose-50 inline-block px-3 py-1.5 rounded-md self-start border border-rose-100">RS Mata Ramata</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-rose-600 transition-colors">"Bahaya Penggunaan Gadget Berlebihan Bagi Mata"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Pakar mata memperingatkan bahaya laten dari paparan layar yang terus-menerus. Deteksi dan istirahat berkala adalah saran utama dari para profesional kesehatan mata.</p>
+                    <a href="https://rsmramata.com/artikel/bahaya-penggunaan-gadget-berlebihan-bagi-kesehatan-mata-dan-saran-dari-ramata-eye-center/" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-rose-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+                <!-- Berita 10: National Hospital -->
+                <div class="snap-center shrink-0 w-[85vw] sm:w-[400px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.04)] border border-slate-100 hover:border-teal-400 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                    <span class="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-4 bg-teal-50 inline-block px-3 py-1.5 rounded-md self-start border border-teal-100">National Hospital</span>
+                    <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-snug group-hover:text-teal-600 transition-colors">"Tanda Mata Lelah yang Tak Boleh Diabaikan"</h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm line-clamp-4 mb-8 flex-grow">Mata lelah sering dianggap remeh, padahal ini adalah sinyal awal dari sistem saraf bahwa otak dan penglihatan Anda membutuhkan jeda pemulihan segera.</p>
+                    <a href="https://national-hospital.com/id/artikel/tanda-mata-lelah-yang-tak-boleh-diabaikan" target="_blank" rel="noopener noreferrer" class="mt-auto text-xs font-black text-slate-400 hover:text-teal-600 transition flex items-center gap-2">BACA ARTIKEL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7-7m7-7H3"></path></svg></a>
+                </div>
+
+            </div>
+            
+            <!-- Indikator Geser -->
+            <div class="text-center mt-6">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest animate-pulse flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+                    Geser Kartu Untuk Membaca Referensi Lainnya
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </p>
+            </div>
+        </section>
+
+        <!-- 6. TEAM SECTION -->
+        <section id="team" class="py-32 relative z-10 bg-white overflow-hidden border-t border-slate-100">
+            <div class="max-w-[90rem] mx-auto px-6 lg:px-16 text-center">
+                 <span class="text-sky-500 font-bold tracking-[0.2em] text-sm uppercase mb-4 block">Profil Pengembang</span>
+                 <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-800 mb-16">
+                    Pilar Utama di Balik<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-500">Visage Metrics</span>
+                 </h2>
+
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+                     
+                     <!-- Anggota 1: Wisnu -->
+                     <div class="w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-sky-200 transition-all duration-300 group text-center">
+                         <div class="w-32 h-32 mx-auto bg-sky-100 rounded-full mb-6 border-4 border-white shadow-md overflow-hidden relative">
+                             <div class="absolute inset-0 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform bg-gradient-to-br from-sky-100 to-blue-200">👨‍💻</div>
+                         </div>
+                         <h3 class="text-2xl font-black text-slate-800 mb-2 group-hover:text-sky-600 transition-colors">Wisnu Aji Sanjaya</h3>
+                         <p class="text-sky-600 font-bold text-xs tracking-widest uppercase mb-4 px-3 py-1 bg-sky-50 rounded-md inline-block">Front-End Engineer</p>
+                         <p class="text-slate-500 font-medium text-sm mb-6 leading-relaxed">Berfokus pada perancangan arsitektur antarmuka (UI/UX), integrasi sistem web, dan interaksi visual.</p>
+                     </div>
+
+                     <!-- Anggota 2: Yoka -->
+                     <div class="w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-indigo-200 transition-all duration-300 group text-center">
+                         <div class="w-32 h-32 mx-auto bg-indigo-100 rounded-full mb-6 border-4 border-white shadow-md overflow-hidden relative">
+                             <div class="absolute inset-0 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform bg-gradient-to-br from-indigo-100 to-purple-200">⚙️</div>
+                         </div>
+                         <h3 class="text-2xl font-black text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">Yoka Romadani</h3>
+                         <p class="text-indigo-600 font-bold text-xs tracking-widest uppercase mb-4 px-3 py-1 bg-indigo-50 rounded-md inline-block">Back-End Engineer</p>
+                         <p class="text-slate-500 font-medium text-sm mb-6 leading-relaxed">Bertanggung jawab atas manajemen basis data, keamanan sistem server, dan membangun struktur endpoint API.</p>
+                     </div>
+
+                     <!-- Anggota 3: Bara -->
+                     <div class="w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group text-center">
+                         <div class="w-32 h-32 mx-auto bg-emerald-100 rounded-full mb-6 border-4 border-white shadow-md overflow-hidden relative">
+                             <div class="absolute inset-0 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform bg-gradient-to-br from-emerald-100 to-teal-200">🧠</div>
+                         </div>
+                         <h3 class="text-2xl font-black text-slate-800 mb-2 group-hover:text-emerald-600 transition-colors">Bara Aulia Attar</h3>
+                         <p class="text-emerald-600 font-bold text-xs tracking-widest uppercase mb-4 px-3 py-1 bg-emerald-50 rounded-md inline-block">AI Modeler</p>
+                         <p class="text-slate-500 font-medium text-sm mb-6 leading-relaxed">Arsitektur model Deep Learning. Membangun algoritma deteksi pola wajah dan pembacaan Eye Aspect Ratio.</p>
+                     </div>
+
+                 </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-8 text-center text-slate-500 text-[10px] tracking-[0.5em] uppercase bg-white relative z-10 font-bold border-t border-slate-200">
+        &copy; 2026 VISAGE METRICS • RESEARCH & DEVELOPMENT • UNIT TELKOM UNIVERSITY PURWOKERTO
+    </footer>
+
+</body>
+
+</html>
