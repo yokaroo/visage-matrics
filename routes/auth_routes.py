@@ -1,33 +1,48 @@
 """
 Authentication routes for Visage Metrics
-Handles login, register, logout, and user authentication
+Handles login, register, logout, and user authentication with Supabase
 """
 
 from flask import Blueprint, request, jsonify, session
 from datetime import datetime
-import json
+from dotenv import load_dotenv
+import os
+import logging
+
+# Load environment variables
+load_dotenv()
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
-# Mock user database (replace with real database)
-users_db = {
-    'admin@visage.com': {
-        'password': 'admin123',
-        'name': 'Admin User',
-        'role': 'admin'
-    },
-    'user@visage.com': {
-        'password': 'user123',
-        'name': 'Regular User',
-        'role': 'user'
-    }
-}
+# Initialize Supabase client
+try:
+    from supabase import create_client, Client
+    
+    SUPABASE_URL = os.getenv('SUPABASE_URL')
+    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+    
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        logger.info("[OK] Supabase client initialized")
+    else:
+        logger.error("[ERROR] Missing SUPABASE_URL or SUPABASE_KEY in .env")
+        supabase = None
+except ImportError:
+    logger.warning("[WARNING] supabase module not installed. Install with: pip install supabase")
+    supabase = None
+except Exception as e:
+    logger.error(f"[ERROR] Failed to initialize Supabase: {str(e)}")
+    supabase = None
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """
-    Register a new user
+    Register a new user with Supabase
     Expected JSON: {
         "email": "user@example.com",
         "password": "password",
@@ -35,6 +50,9 @@ def register():
     }
     """
     try:
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+        
         data = request.get_json()
         
         # Validate input
@@ -49,37 +67,72 @@ def register():
         if '@' not in email:
             return jsonify({'error': 'Invalid email format'}), 400
         
-        # Check if user already exists
-        if email in users_db:
-            return jsonify({'error': 'Email already registered'}), 409
+        # Validate password
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
         
-        # Create new user
-        users_db[email] = {
-            'password': password,
-            'name': name,
-            'role': 'user',
-            'created_at': datetime.now().isoformat()
-        }
-        
-        return jsonify({
-            'success': True,
-            'message': 'User registered successfully',
-            'email': email
-        }), 201
+        # Try to register user with Supabase Auth
+        try:
+            auth_response = supabase.auth.sign_up({
+                'email': email,
+                'password': password
+            })
+            
+            user_id = auth_response.user.id
+            
+            # Insert profile data into profil_pengguna table
+            profile_data = {
+                'id': user_id,
+                'nama_lengkap': name,
+                'email': email,
+                'role': 'mahasiswa',
+                'status_akun': 'aktif',
+                'created_at': datetime.now().isoformat()
+            }
+            
+            # Try to insert profile, but don't fail if table doesn't exist
+            try:
+                supabase.table('profil_pengguna').insert([profile_data]).execute()
+            except Exception as profile_err:
+                logger.warning(f"Could not insert profile: {str(profile_err)}")
+                # Continue anyway - auth was successful
+            
+            logger.info(f"[OK] User registered: {email}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'User registered successfully. Please login.',
+                'email': email
+            }), 201
+            
+        except Exception as auth_err:
+            error_msg = str(auth_err)
+            logger.error(f"[ERROR] Registration failed for {email}: {error_msg}")
+            
+            # Handle specific Supabase errors
+            if 'already exists' in error_msg.lower():
+                return jsonify({'error': 'Email already registered'}), 409
+            
+            return jsonify({'error': error_msg or 'Registration failed'}), 400
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("[ERROR] Unexpected error in register")
+        return jsonify({'error': 'Server error during registration'}), 500
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """
-    Login user
+    Login user with Supabase
     Expected JSON: {
         "email": "user@example.com",
         "password": "password"
     }
     """
     try:
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+        
         data = request.get_json()
         
         # Validate input
@@ -89,43 +142,90 @@ def login():
         email = data['email'].lower().strip()
         password = data['password']
         
-        # Check user
-        if email not in users_db:
-            return jsonify({'error': 'Invalid email or password'}), 401
-        
-        user = users_db[email]
-        if user['password'] != password:
-            return jsonify({'error': 'Invalid email or password'}), 401
-        
-        # Set session
-        session['user_id'] = email
-        session['user_name'] = user['name']
-        session['user_role'] = user['role']
-        
-        return jsonify({
-            'success': True,
-            'message': 'Login successful',
-            'user': {
+        # Try to login with Supabase Auth
+        try:
+            auth_response = supabase.auth.sign_in_with_password({
                 'email': email,
-                'name': user['name'],
-                'role': user['role']
-            }
-        }), 200
+                'password': password
+            })
+            
+            user_id = auth_response.user.id
+            user_email = auth_response.user.email
+            
+            # Try to fetch user profile
+            try:
+                profile_response = supabase.table('profil_pengguna').select('*').eq('id', user_id).execute()
+                profile = profile_response.data[0] if profile_response.data else None
+                
+                user_name = profile.get('nama_lengkap', 'Pengguna') if profile else 'Pengguna'
+                user_role = profile.get('role', 'mahasiswa') if profile else 'mahasiswa'
+                
+            except Exception as profile_err:
+                logger.warning(f"Could not fetch profile for {user_id}: {str(profile_err)}")
+                user_name = 'Pengguna'
+                user_role = 'mahasiswa'
+            
+            # Set session
+            session['user_id'] = user_id
+            session['user_email'] = user_email
+            session['user_name'] = user_name
+            session['user_role'] = user_role
+            session.permanent = True
+            
+            logger.info(f"[OK] User logged in: {email} (role: {user_role})")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'user': {
+                    'id': user_id,
+                    'email': user_email,
+                    'name': user_name,
+                    'role': user_role
+                }
+            }), 200
+            
+        except Exception as auth_err:
+            error_msg = str(auth_err).lower()
+            logger.warning(f"[WARNING] Login failed for {email}: {str(auth_err)}")
+            
+            if 'invalid' in error_msg or 'credentials' in error_msg:
+                return jsonify({'error': 'Invalid email or password'}), 401
+            
+            return jsonify({'error': 'Login failed. Please try again.'}), 401
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("[ERROR] Unexpected error in login")
+        return jsonify({'error': 'Server error during login'}), 500
+
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     """Logout user"""
     try:
+        if not supabase:
+            session.clear()
+            return jsonify({'success': True, 'message': 'Logged out'}), 200
+        
+        # Try to sign out from Supabase
+        try:
+            supabase.auth.sign_out()
+        except Exception as err:
+            logger.warning(f"Could not sign out from Supabase: {str(err)}")
+        
+        # Clear server session
         session.clear()
+        
+        logger.info("[OK] User logged out")
+        
         return jsonify({
             'success': True,
             'message': 'Logout successful'
         }), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("[ERROR] Error during logout")
+        return jsonify({'error': 'Logout failed'}), 500
+
 
 @auth_bp.route('/profile', methods=['GET'])
 def get_profile():
@@ -135,22 +235,51 @@ def get_profile():
             return jsonify({'error': 'Not authenticated'}), 401
         
         user_id = session['user_id']
-        user = users_db.get(user_id)
         
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
+        if not supabase:
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': user_id,
+                    'email': session.get('user_email', ''),
+                    'name': session.get('user_name', ''),
+                    'role': session.get('user_role', '')
+                }
+            }), 200
         
-        return jsonify({
-            'success': True,
-            'user': {
-                'email': user_id,
-                'name': user['name'],
-                'role': user['role']
-            }
-        }), 200
+        # Fetch from Supabase
+        try:
+            response = supabase.table('profil_pengguna').select('*').eq('id', user_id).execute()
+            profile = response.data[0] if response.data else None
+            
+            if not profile:
+                return jsonify({'error': 'User profile not found'}), 404
+            
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': user_id,
+                    'email': session.get('user_email', ''),
+                    'name': profile.get('nama_lengkap', ''),
+                    'role': profile.get('role', 'mahasiswa')
+                }
+            }), 200
+        except Exception as err:
+            logger.warning(f"Could not fetch profile: {str(err)}")
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': user_id,
+                    'email': session.get('user_email', ''),
+                    'name': session.get('user_name', ''),
+                    'role': session.get('user_role', '')
+                }
+            }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("[ERROR] Error fetching profile")
+        return jsonify({'error': 'Server error'}), 500
+
 
 @auth_bp.route('/verify', methods=['GET'])
 def verify_token():
@@ -159,7 +288,8 @@ def verify_token():
         if 'user_id' in session:
             return jsonify({
                 'authenticated': True,
-                'user_id': session['user_id'],
+                'user_id': session.get('user_id'),
+                'user_email': session.get('user_email', ''),
                 'user_name': session.get('user_name', ''),
                 'user_role': session.get('user_role', '')
             }), 200
@@ -168,51 +298,9 @@ def verify_token():
                 'authenticated': False
             }), 401
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("[ERROR] Error verifying token")
+        return jsonify({'error': 'Server error'}), 500
 
-@auth_bp.route('/change-password', methods=['POST'])
-def change_password():
-    """
-    Change user password
-    Expected JSON: {
-        "old_password": "current_password",
-        "new_password": "new_password",
-        "confirm_password": "new_password"
-    }
-    """
-    try:
-        if 'user_id' not in session:
-            return jsonify({'error': 'Not authenticated'}), 401
-        
-        data = request.get_json()
-        
-        if not data or not all(k in data for k in ['old_password', 'new_password', 'confirm_password']):
-            return jsonify({'error': 'Missing required fields'}), 400
-        
-        user_id = session['user_id']
-        user = users_db.get(user_id)
-        
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-        
-        # Verify old password
-        if user['password'] != data['old_password']:
-            return jsonify({'error': 'Incorrect old password'}), 401
-        
-        # Verify passwords match
-        if data['new_password'] != data['confirm_password']:
-            return jsonify({'error': 'Passwords do not match'}), 400
-        
-        # Update password
-        user['password'] = data['new_password']
-        
-        return jsonify({
-            'success': True,
-            'message': 'Password changed successfully'
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 def register_auth_routes(app):
     """Register authentication routes with Flask app"""

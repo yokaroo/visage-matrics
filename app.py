@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import base64
+import logging
 import numpy as np
 import cv2
 from io import BytesIO
@@ -16,6 +17,7 @@ from datetime import datetime
 import tensorflow as tf
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 # Add src to path for imports
@@ -58,13 +60,55 @@ except Exception as e:
     print(f"[WARNING] Could not import analytics_routes: {str(e)}")
     register_analytics_routes = None
 
+# Import auth middleware
+try:
+    from core.auth_middleware import login_required, admin_required, user_required
+except Exception as e:
+    print(f"[WARNING] Could not import auth_middleware: {str(e)}")
+    login_required = None
+    admin_required = None
+    user_required = None
+
 # Initialize Flask App
 app = Flask(__name__, 
-            template_folder='Pages',
+            template_folder='templates',
             static_folder='assets')
 
 # Enable CORS
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Secret key for session handling
+app.secret_key = os.environ.get('SECRET_KEY', 'change-me-in-production')
+
+# Session configuration
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(error):
+    logger.warning("HTTP exception on %s: %s", request.path, error)
+    if request.path.startswith('/api/'):
+        return jsonify({'error': error.description or 'Resource not found', 'status': error.code}), error.code
+
+    if error.code == 404:
+        return render_template('404.html'), 404
+    return render_template('500.html'), error.code
+
+@app.errorhandler(Exception)
+def handle_unhandled_exception(error):
+    logger.exception("Unhandled exception at %s", request.path)
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Terjadi kesalahan pada server. Silakan coba lagi nanti.'}), 500
+    return render_template('500.html'), 500
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
@@ -144,13 +188,15 @@ def preprocess_image_for_inference(image_path, target_size=(96, 96)):
 # ==================== ROUTES ====================
 
 @app.route('/')
+@app.route('/index.html')
+@app.route('/landing.html')
 def index():
-    """Serve landing page"""
+    """Serve homepage landing page"""
     try:
-        return send_file('Pages/user/landing.html')
+        return send_file('landing_page.html')
     except Exception as e:
-        print(f"Error serving landing page: {e}")
-        return jsonify({'error': 'Landing page not found'}), 404
+        print(f"Error serving homepage: {e}")
+        return jsonify({'error': 'Homepage not found'}), 404
 
 @app.route('/login')
 def login_page():
@@ -193,7 +239,7 @@ def register_page_html():
 def user_landing():
     """Serve user landing page"""
     try:
-        return send_file('Pages/user/landing.html')
+        return send_file('Pages/user/halaman_user.html')
     except:
         return jsonify({'error': 'Page not found'}), 404
 
@@ -201,7 +247,15 @@ def user_landing():
 def user_landing_html():
     """Serve user landing page (with .html extension)"""
     try:
-        return send_file('Pages/user/landing.html')
+        return send_file('Pages/user/halaman_user.html')
+    except:
+        return jsonify({'error': 'Page not found'}), 404
+
+@app.route('/user/halaman_user.html')
+def user_halaman_user_html():
+    """Serve user halaman_user page"""
+    try:
+        return send_file('Pages/user/halaman_user.html')
     except:
         return jsonify({'error': 'Page not found'}), 404
 
@@ -304,7 +358,11 @@ def user_sistem_html():
 # ===== ADMIN PAGES =====
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    """Serve admin dashboard"""
+    """Serve admin dashboard - Admin only"""
+    from flask import session, redirect
+    # Check if user is admin
+    if 'user_id' not in session or session.get('user_role', '').lower() != 'admin':
+        return redirect('/')
     try:
         return send_file('Pages/admin/dashboard.html')
     except:
@@ -312,7 +370,11 @@ def admin_dashboard():
 
 @app.route('/admin/dashboard.html')
 def admin_dashboard_html():
-    """Serve admin dashboard (with .html extension)"""
+    """Serve admin dashboard (with .html extension) - Admin only"""
+    from flask import session, redirect
+    # Check if user is admin
+    if 'user_id' not in session or session.get('user_role', '').lower() != 'admin':
+        return redirect('/')
     try:
         return send_file('Pages/admin/dashboard.html')
     except:
@@ -492,7 +554,7 @@ def serve_models(filename):
 def catch_pages_user_landing():
     """Catch Pages/user/landing.html request"""
     try:
-        return send_file('Pages/user/landing.html')
+        return send_file('Pages/user/halaman_user.html')
     except:
         return jsonify({'error': 'Page not found'}), 404
 

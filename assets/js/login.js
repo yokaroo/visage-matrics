@@ -1,6 +1,4 @@
-// Import koneksi jantung Supabase
-import { supabase } from './supabaseClient.js';
-
+// Login Page - Using Backend API
 document.addEventListener("DOMContentLoaded", function() {
     const formLogin = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
@@ -8,10 +6,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (formLogin) {
         formLogin.addEventListener('submit', async function(event) {
-            // Mencegah reload halaman bawaan form
             event.preventDefault();
 
-            // Sembunyikan error dan ubah tombol jadi loading
+            // Reset error message
             errorMsg.classList.add('hidden');
             const teksAsli = btnSubmit.innerHTML;
             btnSubmit.innerHTML = 'Memverifikasi...';
@@ -20,48 +17,66 @@ document.addEventListener("DOMContentLoaded", function() {
             const email = document.getElementById('inputEmail').value.trim();
             const password = document.getElementById('inputPassword').value;
 
+            // Validasi input
+            if (!email || !password) {
+                showError('Email dan password harus diisi!');
+                resetButton();
+                return;
+            }
+
             try {
-                // 1. Eksekusi Login API Supabase
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                // Kirim login request ke backend
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
                 });
 
-                if (error) throw error; // Lempar ke blok catch di bawah jika gagal
+                const payload = await response.json();
 
-                // 2. Ambil informasi Role/Peran dari tabel profil_pengguna
-                // PERBAIKAN: Menggunakan .maybeSingle() agar tidak error jika data profil belum ada
-                const { data: profileData, error: profileError } = await supabase
-                    .from('profil_pengguna')
-                    .select('role')
-                    .eq('id', data.user.id)
-                    .maybeSingle();
+                if (!response.ok) {
+                    throw new Error(payload.error || 'Login gagal. Periksa kembali email dan password Anda.');
+                }
 
-                if (profileError) throw profileError;
-
-                // 3. Simpan preferensi "Remember Me"
+                // Simpan preferensi "Remember Me"
                 const checkRemember = document.getElementById('checkRemember');
                 if (checkRemember && checkRemember.checked) {
                     localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', payload.user.role);
+                    localStorage.setItem('userName', payload.user.name);
                 } else {
                     sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('userRole', payload.user.role);
+                    sessionStorage.setItem('userName', payload.user.name);
                 }
 
-                // 4. Redirect cerdas berdasarkan Role
-                // Jika profil ditemukan dan role-nya admin, arahkan ke dashboard admin
-                if (profileData && profileData.role && profileData.role.toLowerCase() === 'admin') {
-                    window.location.href = "Pages/admin/dashboard.html";
-                } else {
-                    // Jika profil mahasiswa ATAU profilnya kosong (belum ada), arahkan ke landing page
-                    window.location.href = "Pages/user/landing.html";
-                }
+                // Redirect berdasarkan role
+                setTimeout(() => {
+                    if (payload.user.role && payload.user.role.toLowerCase() === 'admin') {
+                        window.location.href = '/admin/dashboard.html';
+                    } else {
+                        window.location.href = '/user/landing.html';
+                    }
+                }, 500);
 
             } catch (err) {
-                // Tampilkan pesan error jika login gagal
-                errorMsg.innerText = err.message || 'Login gagal. Periksa kembali email dan password Anda.';
-                errorMsg.classList.remove('hidden');
+                showError(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
             } finally {
-                // Kembalikan kondisi tombol
+                resetButton();
+            }
+
+            function showError(msg) {
+                errorMsg.innerText = msg;
+                errorMsg.classList.remove('hidden');
+                console.error('[LOGIN ERROR]', msg);
+            }
+
+            function resetButton() {
                 btnSubmit.innerHTML = teksAsli;
                 btnSubmit.disabled = false;
             }

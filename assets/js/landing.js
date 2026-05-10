@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js';
+// Landing page untuk user yang sudah login
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -67,56 +67,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     sections.forEach(section => sectionObserver.observe(section));
 
     // =========================================================
-    // 4. LOGIKA SUPABASE (AUTH & PROFIL)
+    // 4. LOGIKA LOGIN CHECK (dari Backend Session)
     // =========================================================
-    try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        // JIKA TIDAK ADA SESI -> TENDANG KE INDEX.HTML
-        if (!session || !session.user) {
-            alert("Sesi telah habis atau Anda belum login!");
-            window.location.href = '../../index.html'; // Pindah ke index.html di root
-            return;
-        }
-
-        // Tarik Data Profil
-        const { data: profile } = await supabase
-            .from('profil_pengguna')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-        if (profile) {
-            // Isi UI Teks
-            const elNama = document.getElementById('sidebar-nama');
-            const elNim = document.getElementById('sidebar-nim');
-            const elProdi = document.getElementById('sidebar-prodi');
-            const dashNama = document.getElementById('dash-nama');
-
-            if (elNama) elNama.textContent = profile.nama_lengkap || "Mahasiswa";
-            if (elNim) elNim.textContent = "NIM: " + (profile.nim || "-");
-            if (elProdi) elProdi.textContent = profile.prodi || "Sains Data";
-            if (dashNama) dashNama.textContent = profile.nama_lengkap || "Mahasiswa";
-
-            // Isi Input Form Edit
-            const editEmail = document.getElementById('edit-email');
-            const editNama = document.getElementById('edit-nama');
-            const editNim = document.getElementById('edit-nim');
-            const editProdi = document.getElementById('edit-prodi');
-            const editJk = document.getElementById('edit-jk');
-
-            if (editEmail) editEmail.value = session.user.email;
-            if (editNama) editNama.value = profile.nama_lengkap || '';
-            if (editNim) editNim.value = profile.nim || '';
-            if (editProdi) editProdi.value = profile.prodi || 'S1 Sains Data';
-            if (editJk) editJk.value = profile.jenis_kelamin || 'Laki-laki';
-        } else {
-            const editEmail = document.getElementById('edit-email');
-            if (editEmail) editEmail.value = session.user.email;
-        }
-    } catch (err) {
-        console.warn("Error saat load session Supabase:", err);
+    
+    // Periksa apakah user sudah login dari localStorage/sessionStorage
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true';
+    const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName') || 'Pengguna';
+    const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'user';
+    
+    if (!isLoggedIn) {
+        alert("Sesi telah habis atau Anda belum login!");
+        window.location.href = '/index.html';
+        return;
     }
+
+    // Periksa role - jika admin, redirect ke admin dashboard
+    if (userRole.toLowerCase() === 'admin') {
+        window.location.href = '/Pages/admin/dashboard.html';
+        return;
+    }
+
+    // Tampilkan nama user di UI
+    const elNama = document.getElementById('sidebar-nama');
+    const dashNama = document.getElementById('dash-nama');
+
+    if (elNama) elNama.textContent = userName || "Pengguna";
+    if (dashNama) dashNama.textContent = userName || "Pengguna";
+
 
     // =========================================================
     // 5. SIMPAN DATA PROFIL & GANTI SANDI
@@ -209,16 +186,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnLogout.innerHTML = 'Keluar...';
             
             try {
-                await supabase.auth.signOut();
+                // Panggil logout API ke backend
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
             } catch (err) {
                 console.error("Gagal Logout:", err);
             }
             
-            localStorage.clear();
+            // Clear local storage
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
             sessionStorage.clear();
             
             // Arahkan ke halaman depan
-            window.location.href = '../../index.html'; 
+            window.location.href = '/index.html'; 
         });
     }
 

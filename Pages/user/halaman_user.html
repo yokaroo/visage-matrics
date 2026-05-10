@@ -458,6 +458,58 @@
             if (backdrop) backdrop.addEventListener('click', toggleSidebar);
         });
     </script>
+
+    <!-- ========================================== -->
+    <!-- SCRIPT AUTH & LOGOUT                      -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { getCurrentUserProfile, logoutWithApi, requireUser } from '../../assets/js/auth-helper.js';
+
+        // Check authentication on page load
+        async function initPage() {
+            try {
+                // Require user authentication (redirect if not user or not logged in)
+                if (!await requireUser()) {
+                    return;
+                }
+
+                // Get user profile
+                const user = await getCurrentUserProfile();
+                if (user) {
+                    // Update UI with user name
+                    const namElements = document.querySelectorAll('#dash-nama, #sidebar-nama');
+                    namElements.forEach(el => {
+                        if (el) el.textContent = user.name || 'Pengguna';
+                    });
+                }
+            } catch (error) {
+                console.error('[Halaman User] Init error:', error);
+            }
+        }
+
+        // Handle logout button
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) {
+            btnLogout.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                if (confirm('Apakah Anda yakin ingin logout?')) {
+                    try {
+                        const isLoggedOut = await logoutWithApi();
+                        if (isLoggedOut) {
+                            window.location.href = '/';
+                        }
+                    } catch (error) {
+                        console.error('[Logout Error]:', error);
+                        alert('Gagal logout. Silakan coba lagi.');
+                    }
+                }
+            });
+        }
+
+        // Initialize page
+        initPage();
+    </script>
 </body>
 
 </html>

@@ -1,6 +1,4 @@
-// Import koneksi jantung Supabase
-import { supabase } from './supabaseClient.js';
-
+// Register Page - Using Backend API
 document.addEventListener("DOMContentLoaded", function() {
     const formRegister = document.getElementById('registerForm');
     const inputPassword = document.getElementById('inputPasswordReg');
@@ -10,97 +8,119 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (formRegister) {
         formRegister.addEventListener('submit', async function(event) {
-            // Mencegah reload halaman
             event.preventDefault();
 
-            // Sembunyikan pesan error sebelumnya
             errorMsg.classList.add('hidden');
 
-            // Ambil semua nilai dari form
             const namaLengkap = document.getElementById('inputNama').value.trim();
             const email = document.getElementById('inputEmail').value.trim();
-            const nim = document.getElementById('inputNim').value.trim();
-            const prodi = document.getElementById('inputProdi').value;
-            const jenisKelamin = document.getElementById('inputJK').value;
             const passValue = inputPassword.value;
             const repassValue = inputRepassword.value;
 
-            // 1. Validasi Password
+            // Validasi
+            if (!namaLengkap || !email || !passValue || !repassValue) {
+                showError('Semua field harus diisi!');
+                return;
+            }
+
             if (passValue !== repassValue) {
-                errorMsg.innerText = "Password tidak cocok! Harap cek kembali.";
-                errorMsg.classList.remove('hidden');
+                showError('Password tidak cocok! Harap cek kembali.');
                 inputRepassword.classList.add('border-red-500');
                 setTimeout(() => inputRepassword.classList.remove('border-red-500'), 3000);
                 return;
             }
 
             if (passValue.length < 6) {
-                errorMsg.innerText = "Password minimal harus 6 karakter!";
-                errorMsg.classList.remove('hidden');
+                showError('Password minimal harus 6 karakter!');
                 return;
             }
 
-            // Ubah tombol jadi loading
+            if (!email.includes('@')) {
+                showError('Email tidak valid!');
+                return;
+            }
+
             const teksAsli = btnSubmit.innerHTML;
             btnSubmit.innerHTML = 'Memproses...';
             btnSubmit.disabled = true;
 
             try {
-                // 2. Daftarkan Akun ke Supabase Auth (Brankas Keamanan)
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email: email,
-                    password: passValue,
-                    options: {
-                        data: { full_name: namaLengkap } // Menyimpan nama di metadata auth
-                    }
+                // Kirim register request ke backend
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: passValue,
+                        name: namaLengkap
+                    })
                 });
 
-                if (authError) throw authError;
+                const payload = await response.json();
 
-                // 3. Simpan Data Diri ke Tabel "profil_pengguna"
-                if (authData && authData.user) {
-                    const { error: dbError } = await supabase
-                        .from('profil_pengguna')
-                        .insert([
-                            { 
-                                id: authData.user.id, // Menghubungkan ID Auth dengan ID Profil
-                                nama_lengkap: namaLengkap, 
-                                nim: nim, 
-                                prodi: prodi, 
-                                jenis_kelamin: jenisKelamin,
-                                role: 'mahasiswa' // Default role
-                            }
-                        ]);
-
-                    if (dbError) {
-                        console.error("Gagal menyimpan profil:", dbError);
-                        // Catatan: Jika ini gagal, akun Auth tetap terbuat. 
-                        // Idealnya menggunakan Trigger Supabase, tapi insert manual ini sudah cukup untuk sekarang.
-                    }
+                if (!response.ok) {
+                    throw new Error(payload.error || 'Registrasi gagal. Silakan coba lagi.');
                 }
 
-                // 4. Jika semua berhasil
+                // Sukses
                 alert(`Registrasi Berhasil!\n\nEmail: ${email}\nSilakan Login menggunakan akun ini.`);
-                
-                // Redirect ke halaman login
-                window.location.href = "login.html";
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 500);
 
             } catch (err) {
-                // Tampilkan pesan error jika proses gagal
-                errorMsg.innerText = err.message || 'Terjadi kesalahan saat registrasi. Silakan coba lagi.';
-                errorMsg.classList.remove('hidden');
+                showError(err.message || 'Terjadi kesalahan saat registrasi.');
             } finally {
-                // Kembalikan tombol ke semula
                 btnSubmit.innerHTML = teksAsli;
                 btnSubmit.disabled = false;
+            }
+
+            function showError(msg) {
+                errorMsg.innerText = msg;
+                errorMsg.classList.remove('hidden');
+                console.error('[REGISTER ERROR]', msg);
+            }
+        });
+    }
+
+    // Validasi password real-time
+    if (inputPassword) {
+        inputPassword.addEventListener('input', function() {
+            if (this.value.length > 0 && inputRepassword.value.length > 0) {
+                if (this.value === inputRepassword.value) {
+                    this.classList.remove('border-red-300');
+                    inputRepassword.classList.remove('border-red-300');
+                } else {
+                    this.classList.add('border-red-300');
+                    inputRepassword.classList.add('border-red-300');
+                }
+            }
+        });
+    }
+
+    if (inputRepassword) {
+        inputRepassword.addEventListener('input', function() {
+            if (this.value.length > 0 && inputPassword.value.length > 0) {
+                if (this.value === inputPassword.value) {
+                    this.classList.remove('border-red-300');
+                    inputPassword.classList.remove('border-red-300');
+                } else {
+                    this.classList.add('border-red-300');
+                    inputPassword.classList.add('border-red-300');
+                }
             }
         });
     }
 
     // Sembunyikan error otomatis saat user mulai memperbaiki input
-    if (inputRepassword) {
-        inputRepassword.addEventListener('input', () => {
-            errorMsg.classList.add('hidden');
+    if (formRegister) {
+        const allInputs = formRegister.querySelectorAll('input, select');
+        allInputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                errorMsg.classList.add('hidden');
+            });
         });
     }
 });

@@ -1,86 +1,201 @@
-// assets/js/auth-helper.js
-// Helper functions untuk semua operasi Supabase
+/**
+ * Authentication Helper - Client-side auth utilities
+ * Provides functions for checking auth status, role checking, logout, etc.
+ */
 
-import { supabase } from './supabaseClient.js';
-
-// ===== AUTH FUNCTIONS =====
+// ===== SESSION-BASED AUTH FUNCTIONS =====
 
 /**
- * Login user dengan email dan password
+ * Get current user profile from backend session
  */
-export async function loginUser(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-    });
-    return { data, error };
+export async function getCurrentUserProfile() {
+    try {
+        const response = await fetch('/api/auth/profile', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.user;
+        }
+        return null;
+    } catch (error) {
+        console.error('[AuthHelper] Profile fetch error:', error);
+        return null;
+    }
 }
 
 /**
- * Register user dengan email dan password
+ * Login user melalui backend API
  */
-export async function registerUser(email, password) {
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password
+export async function loginWithApi(email, password) {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
     });
-    return { data, error };
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+        const message = payload?.error || 'Login gagal. Silakan coba lagi.';
+        throw new Error(message);
+    }
+
+    return payload;
+}
+
+/**
+ * Register user melalui backend API
+ */
+export async function registerWithApi(email, password, name) {
+    const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, name })
+    });
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+        const message = payload?.error || 'Registrasi gagal. Silakan coba lagi.';
+        throw new Error(message);
+    }
+
+    return payload;
 }
 
 /**
  * Logout user
  */
-export async function logoutUser() {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+export async function logoutWithApi() {
+    try {
+        const response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Logout gagal');
+        }
+
+        // Clear local storage
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        sessionStorage.clear();
+
+        return true;
+    } catch (error) {
+        console.error('[AuthHelper] Logout error:', error);
+        throw error;
+    }
 }
 
 /**
- * Dapatkan user yang sedang login
+ * Check if user is authenticated (from server session)
  */
-export async function getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+export async function isAuthenticated() {
+    const user = await getCurrentUserProfile();
+    return user !== null;
 }
 
 /**
- * Dapatkan session
+ * Check if current user is admin
  */
-export async function getCurrentSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
+export async function isAdmin() {
+    const user = await getCurrentUserProfile();
+    return user?.role?.toLowerCase() === 'admin';
 }
 
-// ===== PROFIL PENGGUNA FUNCTIONS =====
+/**
+ * Check if current user is regular user
+ */
+export async function isUser() {
+    const user = await getCurrentUserProfile();
+    return user && user?.role?.toLowerCase() !== 'admin';
+}
 
 /**
- * Insert profile pengguna ke database
- * @param {Object} profileData - {nim, nama_lengkap, jenis_kelamin, prodi, usia, angkatan, status_akun, role}
+ * Get user name
  */
-export async function insertProfilPengguna(profileData) {
-    const user = await getCurrentUser();
-    
+export async function getUserName() {
+    const user = await getCurrentUserProfile();
+    return user?.name || 'Pengguna';
+}
+
+/**
+ * Get user email
+ */
+export async function getUserEmail() {
+    const user = await getCurrentUserProfile();
+    return user?.email || null;
+}
+
+/**
+ * Redirect to login if not authenticated
+ */
+export async function redirectIfNotAuthenticated() {
+    const user = await getCurrentUserProfile();
     if (!user) {
-        return { error: 'User tidak ditemukan. Silakan login terlebih dahulu.' };
+        window.location.href = '/';
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Redirect based on user role
+ */
+export async function redirectByRole() {
+    const user = await getCurrentUserProfile();
+    if (!user) {
+        window.location.href = '/';
+        return;
     }
 
-    const { error } = await supabase
-        .from('profil_pengguna')
-        .insert([
-            {
-                id: user.id,
-                nim: profileData.nim,
-                nama_lengkap: profileData.nama_lengkap,
-                jenis_kelamin: profileData.jenis_kelamin,
-                prodi: profileData.prodi,
-                usia: profileData.usia,
-                angkatan: profileData.angkatan,
-                status_akun: profileData.status_akun || 'aktif',
-                role: profileData.role || 'mahasiswa'
-            }
-        ]);
+    if (user.role?.toLowerCase() === 'admin') {
+        window.location.href = '/admin/dashboard.html';
+    } else {
+        window.location.href = '/user/landing.html';
+    }
+}
 
-    return { error };
+/**
+ * Require admin access - redirect if not admin
+ */
+export async function requireAdmin() {
+    const user = await getCurrentUserProfile();
+    if (!user) {
+        window.location.href = '/';
+        return false;
+    }
+    if (user.role?.toLowerCase() !== 'admin') {
+        window.location.href = '/user/landing.html';
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Require user access - redirect if admin or not logged in
+ */
+export async function requireUser() {
+    const user = await getCurrentUserProfile();
+    if (!user) {
+        window.location.href = '/';
+        return false;
+    }
+    if (user.role?.toLowerCase() === 'admin') {
+        window.location.href = '/admin/dashboard.html';
+        return false;
+    }
+    return true;
 }
 
 /**

@@ -244,6 +244,58 @@
         </main>
     </div>
 
+    <!-- ========================================== -->
+    <!-- SCRIPT AUTH & INITIALIZATION              -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { requireAdmin, getCurrentUserProfile, logoutWithApi } from '../../assets/js/auth-helper.js';
+
+        // Check if user is admin
+        async function initAdminPage() {
+            try {
+                // Require admin access (redirect if not admin or not logged in)
+                if (!await requireAdmin()) {
+                    return;
+                }
+
+                // Get user profile to display info if needed
+                const user = await getCurrentUserProfile();
+                console.log('[Admin Dashboard] User authenticated as:', user?.role);
+            } catch (error) {
+                console.error('[Admin Dashboard] Init error:', error);
+            }
+        }
+
+        // Handle logout for admin
+        const btnLogoutAdmin = document.getElementById('btn-logout-admin');
+        if (btnLogoutAdmin) {
+            // Remove old event listener if any
+            btnLogoutAdmin.replaceWith(btnLogoutAdmin.cloneNode(true));
+            const newBtn = document.getElementById('btn-logout-admin');
+            
+            if (newBtn) {
+                newBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    
+                    if (confirm('Apakah Anda yakin ingin logout?')) {
+                        try {
+                            const isLoggedOut = await logoutWithApi();
+                            if (isLoggedOut) {
+                                window.location.href = '/';
+                            }
+                        } catch (error) {
+                            console.error('[Logout Error]:', error);
+                            alert('Gagal logout. Silakan coba lagi.');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize page
+        initAdminPage();
+    </script>
+
     <script type="module" src="../../assets/js/admin_dashboard.js"></script>
 </body>
 

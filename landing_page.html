@@ -385,6 +385,31 @@
         &copy; 2026 VISAGE METRICS • RESEARCH & DEVELOPMENT • UNIT TELKOM UNIVERSITY PURWOKERTO
     </footer>
 
+    <!-- Session Check & Auto Redirect -->
+    <script type="module">
+        import { getCurrentUserProfile } from './assets/js/auth-helper.js';
+
+        // Check if user is already logged in
+        async function checkAndRedirect() {
+            try {
+                const user = await getCurrentUserProfile();
+                if (user && user.id) {
+                    // User is logged in, redirect to appropriate dashboard
+                    if (user.role?.toLowerCase() === 'admin') {
+                        window.location.href = '/Pages/admin/dashboard.html';
+                    } else {
+                        window.location.href = '/Pages/user/halaman_user.html';
+                    }
+                }
+            } catch (error) {
+                console.log('[Landing] User not logged in, continuing to landing page');
+            }
+        }
+
+        // Run check on page load
+        checkAndRedirect();
+    </script>
+
 </body>
 
 </html>
