@@ -839,30 +839,3 @@ if __name__ == '__main__':
         threaded=True,
         use_reloader=False
     )
-
-# ==================== MAIN ====================
-
-if __name__ == '__main__':
-    print("=" * 50)
-    print("Visage Metrics - Visual Fatigue Monitor")
-    print("=" * 50)
-    
-    # Load model on startup
-    print("\nLoading ML model...")
-    load_model()
-    
-    # Create uploads directory if not exists
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    
-    print("\n" + "=" * 50)
-    print("Starting Flask application...")
-    print("=" * 50)
-    
-    # Run app
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=True,
-        threaded=True,
-        use_reloader=False
-    )
