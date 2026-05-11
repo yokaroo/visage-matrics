@@ -793,45 +793,45 @@ def request_entity_too_large(error):
     """Handle 413 errors (file too large)"""
     return jsonify({'error': 'File too large. Maximum size is 50MB'}), 413
 
+# ==================== INITIALIZATION ====================
+
+def initialize_app():
+    """Register routes and initialize application resources."""
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    if register_auth_routes:
+        print("[INFO] Registering authentication routes...")
+        register_auth_routes(app)
+
+    if register_inference_routes:
+        print("[INFO] Registering inference routes...")
+        register_inference_routes(app)
+
+    if register_analytics_routes:
+        print("[INFO] Registering analytics routes...")
+        register_analytics_routes(app)
+
+    print("[INFO] Loading ML model...")
+    load_model()
+    if set_inference_model and model:
+        set_inference_model(model)
+
+
+initialize_app()
+
 # ==================== MAIN ====================
 
 if __name__ == '__main__':
     print("=" * 50)
     print("Visage Metrics - Visual Fatigue Monitor")
     print("=" * 50)
-    
-    # Load model on startup
-    print("\nLoading ML model...")
-    load_model()
-    
-    # Set model for inference routes
-    if set_inference_model and model:
-        set_inference_model(model)
-    
-    # Create uploads directory if not exists
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    
-    # Register blueprint routes
-    if register_auth_routes:
-        print("[INFO] Registering authentication routes...")
-        register_auth_routes(app)
-    
-    if register_inference_routes:
-        print("[INFO] Registering inference routes...")
-        register_inference_routes(app)
-    
-    if register_analytics_routes:
-        print("[INFO] Registering analytics routes...")
-        register_analytics_routes(app)
-    
     print("\n" + "=" * 50)
     print("Starting Flask application...")
     print("=" * 50)
     print("\n[OK] Server running at http://localhost:5000")
     print("[OK] Health Check: http://localhost:5000/api/health")
     print("=" * 50 + "\n")
-    
-    # Run app
+
     app.run(
         host='0.0.0.0',
         port=5000,
@@ -839,23 +839,6 @@ if __name__ == '__main__':
         threaded=True,
         use_reloader=False
     )
-
-# ==================== ERROR HANDLERS ====================
-
-@app.errorhandler(404)
-def not_found(error):
-    """Handle 404 errors"""
-    return jsonify({'error': 'Not found'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors"""
-    return jsonify({'error': 'Internal server error'}), 500
-
-@app.errorhandler(413)
-def request_entity_too_large(error):
-    """Handle 413 errors (file too large)"""
-    return jsonify({'error': 'File too large. Maximum size is 50MB'}), 413
 
 # ==================== MAIN ====================
 
