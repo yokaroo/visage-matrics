@@ -1,6 +1,6 @@
 /**
- * VISAGE METRICS - CORE ENGINE v7.0 (FINAL SAFE MODE)
- * Logic: Geometry EAR + CNN Ensemble (Input 84x84 Locked)
+ * VISAGE METRICS - CORE ENGINE v7.0 (FINAL SAFE MODE - HYBRID FIXED)
+ * Logic: Geometry EAR + CNN Ensemble (Input 224x224 + EAR)
  */
 
 import { insertDeteksiMata, getCurrentUser, insertLogAktivitas } from './auth-helper.js';
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- SIMPAN HASIL DETEKSI KE SUPABASE ---
     if (elements.btnSave) {
         elements.btnSave.addEventListener('click', async function(e) {
-            e.preventDefault(); // Mencegah form reload bawaan
+            e.preventDefault(); 
 
             if(!currentUser) {
                 alert("Sesi Anda telah habis, silakan login ulang.");
@@ -139,7 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOAD RESOURCES (MODEL) ---
     async function loadResources() {
         try {
-            aiModel = await tf.loadLayersModel('../../assets/models/web_model/model.json', {compile: false});
+            // FIX: Path diarahkan ke folder models/
+            aiModel = await tf.loadLayersModel('models/model.json', {compile: false});
             console.log("✅ TensorFlow: Model Hybrid Loaded.");
             isModelLoaded = true;
             if (elements.imagePreview.complete && elements.imagePreview.naturalWidth > 0) {
@@ -166,8 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return (a + b) / (2.0 * c);
     }
 
-    // --- AI ENGINE ---
-    async function getEyePrediction(landmarks, indices, targetCanvas) {
+    // --- AI ENGINE (REVISED) ---
+    // FIX: Menambahkan parameter earValue untuk dikirim ke model Hybrid
+    async function getEyePrediction(landmarks, indices, targetCanvas, earValue) {
         const w = elements.imagePreview.naturalWidth;
         const h = elements.imagePreview.naturalHeight;
         const padding = 20;
@@ -179,21 +181,29 @@ document.addEventListener('DOMContentLoaded', () => {
         let y1 = Math.max(0, Math.min(...ys) - padding);
         let y2 = Math.min(h, Math.max(...ys) + padding);
 
-        targetCanvas.width = 84; 
-        targetCanvas.height = 84;
+        // FIX: Resolusi MobileNetV2 Wajib 224x224
+        targetCanvas.width = 224; 
+        targetCanvas.height = 224;
         
         const ctx = targetCanvas.getContext('2d');
-        ctx.clearRect(0, 0, 84, 84);
-        ctx.drawImage(elements.imagePreview, x1, y1, x2 - x1, y2 - y1, 0, 0, 84, 84);
+        ctx.clearRect(0, 0, 224, 224);
+        ctx.drawImage(elements.imagePreview, x1, y1, x2 - x1, y2 - y1, 0, 0, 224, 224);
 
         if (!aiModel) return 0.5;
 
         try {
             return tf.tidy(() => {
+                // Tensor 1: Gambar 224x224
                 let imgTensor = tf.browser.fromPixels(targetCanvas);
                 let batchedTensor = imgTensor.expandDims(0);
-                let normalizedTensor = batchedTensor.toFloat().div(255.0);
-                const prediction = aiModel.predict(normalizedTensor);
+                // FIX: Normalisasi MobileNetV2 (Pixel / 127.5 - 1)
+                let normalizedImg = batchedTensor.toFloat().div(127.5).sub(1.0); 
+
+                // Tensor 2: Nilai EAR
+                let earTensor = tf.tensor2d([[earValue]]);
+
+                // FIX: Memasukkan dua tensor sekaligus ke otak AI
+                const prediction = aiModel.predict([normalizedImg, earTensor]);
                 return prediction.dataSync()[0]; 
             });
         } catch (err) {
@@ -244,8 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // CNN
         let rawAI = 0.5;
         if (aiModel) {
-            const scoreR = await getEyePrediction(landmarks, RIGHT_EYE, elements.canvasKanan);
-            const scoreL = await getEyePrediction(landmarks, LEFT_EYE, elements.canvasKiri);
+            // FIX: Mengirimkan avgEAR ke fungsi getEyePrediction
+            const scoreR = await getEyePrediction(landmarks, RIGHT_EYE, elements.canvasKanan, avgEAR);
+            const scoreL = await getEyePrediction(landmarks, LEFT_EYE, elements.canvasKiri, avgEAR);
             rawAI = (scoreR + scoreL) / 2.0;
         }
 
@@ -259,10 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.resSegar.classList.add('hidden');
 
         // Menyusun Data untuk dikirim ke Database
-        // Mengakali skema: EAR diselipkan di eye_closure, Confidence diselipkan di blink_rate
         detectionData.eye_closure = parseFloat(avgEAR.toFixed(3));
         detectionData.blink_rate = parseFloat((finalAI * 100).toFixed(1));
-        detectionData.head_tilt = 0; // Foto diam tidak menghitung ini
+        detectionData.head_tilt = 0; 
 
         if (avgEAR < 0.25 || finalAI > 0.55) {
             elements.resSayu.classList.remove('hidden');
