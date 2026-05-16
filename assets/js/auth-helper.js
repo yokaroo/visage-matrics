@@ -5,6 +5,8 @@
 
 // ===== SESSION-BASED AUTH FUNCTIONS =====
 
+import { supabase } from './supabaseClient.js';
+
 /**
  * Get current user profile from backend session
  */
@@ -25,6 +27,10 @@ export async function getCurrentUserProfile() {
         console.error('[AuthHelper] Profile fetch error:', error);
         return null;
     }
+}
+
+export async function getCurrentUser() {
+    return await getCurrentUserProfile();
 }
 
 /**

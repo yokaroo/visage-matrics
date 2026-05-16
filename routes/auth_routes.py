@@ -281,6 +281,63 @@ def get_profile():
         return jsonify({'error': 'Server error'}), 500
 
 
+@auth_bp.route('/user-dashboard', methods=['GET'])
+def get_user_dashboard():
+    """Get current user dashboard statistics from Supabase"""
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        user_id = session['user_id']
+
+        # Fetch raw detection data
+        deteksi_response = supabase.table('deteksi_mata').select('*', count='exact').eq('user_id', user_id).order('created_at', desc=True).execute()
+
+        log_response = supabase.table('log_aktivitas').select('*').eq('user_id', user_id).order('created_at', desc=True).limit(5).execute()
+
+        deteksi_data = deteksi_response.data or []
+        log_data = log_response.data or []
+
+        total_analisis = len(deteksi_data)
+        eye_values = [item.get('eye_closure') for item in deteksi_data if item.get('eye_closure') is not None]
+        average_ear = round(sum(eye_values) / len(eye_values), 3) if eye_values else 0.0
+        critical_ear = round(min(eye_values), 3) if eye_values else 0.0
+
+        last_detection = deteksi_data[0] if deteksi_data else None
+        last_activity = next((item for item in log_data if item.get('tipe_log', '').upper() == 'DETEKSI_MATA'), None)
+        if not last_activity and log_data:
+            last_activity = log_data[0]
+
+        recent_scans = []
+        for scan in deteksi_data[:3]:
+            recent_scans.append({
+                'created_at': scan.get('created_at'),
+                'eye_closure': scan.get('eye_closure'),
+                'status_mata': scan.get('status_mata')
+            })
+
+        return jsonify({
+            'success': True,
+            'stats': {
+                'last_scan_at': last_activity.get('created_at') if last_activity else (last_detection.get('created_at') if last_detection else None),
+                'current_status': last_detection.get('status_mata') if last_detection else 'Optimal',
+                'critical_ear': critical_ear,
+                'average_ear': average_ear,
+                'total_analisis': total_analisis,
+                'last_scan_description': last_activity.get('deskripsi') if last_activity else None
+            },
+            'recent_scans': recent_scans,
+            'logs': log_data[:3]
+        }), 200
+
+    except Exception as e:
+        logger.exception("[ERROR] Error fetching user dashboard")
+        return jsonify({'error': 'Tidak dapat mengambil dashboard user saat ini'}), 500
+
+
 @auth_bp.route('/verify', methods=['GET'])
 def verify_token():
     """Verify if user is authenticated"""

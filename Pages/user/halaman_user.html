@@ -137,10 +137,10 @@
                 <div class="mt-12 pt-8 border-t border-slate-200/50 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div>
                         <p class="text-sm font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Kesimpulan Kondisi Matamu</p>
-                        <p class="text-slate-400 text-sm font-medium max-w-md">Dari foto terakhir yang dianalisis, matamu kelihatan cukup lelah. Jangan lupa ambil jeda sebentar dari layar, ya.</p>
+                        <p id="dash-summary" class="text-slate-400 text-sm font-medium max-w-md">Dari foto terakhir yang dianalisis, matamu kelihatan cukup lelah. Jangan lupa ambil jeda sebentar dari layar, ya.</p>
                     </div>
                     
-                    <div class="px-8 py-4 bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-[2rem] shadow-[0_10px_30px_rgba(239,68,68,0.15)] flex items-center gap-4 group-hover:scale-105 transition-transform duration-500">
+                    <div id="dash-status-card" class="px-8 py-4 bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-[2rem] shadow-[0_10px_30px_rgba(239,68,68,0.15)] flex items-center gap-4 group-hover:scale-105 transition-transform duration-500">
                         <span class="w-4 h-4 rounded-full bg-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)]"></span>
                         <span id="dash-status" class="text-2xl md:text-3xl font-black text-red-600 uppercase tracking-[0.1em]">TERINDIKASI LELAH</span>
                     </div>
@@ -153,7 +153,7 @@
                 <div class="w-14 h-14 bg-orange-50/80 text-orange-500 rounded-2xl flex items-center justify-center mb-6 text-2xl border border-orange-100 shadow-sm relative z-10">⚠️</div>
                 <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-2 relative z-10">Titik Kritis EAR</h3>
                 <div class="flex items-end gap-2 mb-4 relative z-10">
-                    <span class="text-6xl font-black text-slate-800 tracking-tighter">0.18</span>
+                    <span id="dash-critical-ear" class="text-6xl font-black text-slate-800 tracking-tighter">0.18</span>
                 </div>
                 <p class="text-sm font-medium text-slate-500 flex-grow relative z-10">Bukaan mata (EAR) Anda sempat menyentuh titik terendah ini pada pemindaian terakhir.</p>
                 <div class="mt-4 px-4 py-2 bg-white/80 rounded-xl border border-slate-100 text-xs font-bold text-slate-500 text-center relative z-10 shadow-sm">
@@ -169,7 +169,7 @@
                         <span class="px-3 py-1 bg-white border border-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-sm">Minggu Ini</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">Rata-Rata EAR</h3>
-                    <span class="text-4xl font-black text-slate-800">0.24</span>
+                    <span id="dash-average-ear" class="text-4xl font-black text-slate-800">0.24</span>
                 </div>
                 <div class="mt-6 w-full h-2 bg-slate-200/50 rounded-full overflow-hidden">
                     <div class="h-full bg-gradient-to-r from-sky-400 to-blue-500 w-[60%] rounded-full shadow-[0_0_10px_rgba(56,189,248,0.5)]"></div>
@@ -184,7 +184,7 @@
                         <span class="px-3 py-1 bg-white border border-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-sm">Total Riwayat</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">Gambar Dianalisis</h3>
-                    <span class="text-4xl font-black text-slate-800">12 <span class="text-lg text-slate-400 font-bold">Foto</span></span>
+                    <span class="text-4xl font-black text-slate-800"><span id="dash-total-count">12</span> <span id="dash-total-unit" class="text-lg text-slate-400 font-bold">Foto</span></span>
                 </div>
                 <p class="mt-6 text-xs font-medium text-slate-500">Jumlah total gambar wajah yang telah diproses oleh sistem.</p>
             </div>

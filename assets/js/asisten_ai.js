@@ -1,5 +1,5 @@
 // IMPORT API KEY DARI FILE RAHASIA
-import { GEMINI_API_KEY } from 'config.js';
+import { GEMINI_API_KEY } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -10,20 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fallback Endpoint: Jika model preview mati, sistem akan turun ke model stabil
     const ENDPOINTS = [
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateText?key=${GEMINI_API_KEY}`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateText?key=${GEMINI_API_KEY}`,
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateText?key=${GEMINI_API_KEY}`,
         // Backup paling aman jika model terbaru error/dihapus google:
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateText?key=${GEMINI_API_KEY}`
     ];
 
     // INSTRUKSI KETAT (GUARDRAIL) UNTUK AI
     const SYSTEM_INSTRUCTION = `Anda adalah Dr. Visage AI, asisten medis virtual spesialis kesehatan mata dari platform Visage Metrics.
 ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
-1. Anda HANYA diizinkan membahas topik seputar kesehatan mata, kelelahan mata (Digital Eye Strain), penglihatan, dan ergonomi layar.
-2. Jika pengguna bertanya tentang topik apa pun di luar kesehatan mata (seperti politik, coding, resep masakan, cuaca, matematika, dll), TOLAK dengan sopan dan arahkan kembali ke topik kesehatan mata. Gunakan format jawaban: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual."
-3. Jawab maksimal dalam 2 paragraf pendek.
-4. Gunakan bahasa Indonesia yang profesional, empatik, dan mudah dipahami mahasiswa.
-5. Jangan pernah menggunakan simbol asterisk (*) atau markdown tebal dalam respons Anda, karena akan dibaca oleh sistem Text-to-Speech.`;
+1. Jawab pertanyaan pengguna secara langsung dan spesifik sesuai topik kesehatan mata, kelelahan mata (Digital Eye Strain), penglihatan, dan ergonomi layar.
+2. Jika pengguna bertanya tentang hal di luar topik kesehatan mata, jawab dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual."
+3. Jangan menambahkan informasi tidak relevan atau pengantar panjang; fokus pada solusi konkret atau jawaban langsung.
+4. Gunakan bahasa Indonesia yang profesional, empatik, mudah dimengerti oleh mahasiswa.
+5. Jawab maksimal dalam 2 paragraf pendek.
+6. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.`;
 
     // ==========================================
     // 2. REFERENSI ELEMEN DOM
@@ -95,35 +100,72 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     const eyeKeywords = ["mata", "perih", "lelah", "kabur", "silau", "pusing", "layar", "kacamata", "tidur", "istirahat", "rabun", "ear", "visage"];
 
     async function getAIResponse(prompt) {
-        
-        // Filter Lapis 1: Cegah API Call jika pertanyaannya sangat jelas di luar topik
-        const isRelated = eyeKeywords.some(keyword => prompt.toLowerCase().includes(keyword));
-        
-        // Kita gabungkan instruksi dengan pertanyaan user
-        // Filter Lapis 2 akan dilakukan langsung oleh model Gemini berdasarkan instruksi ini
-        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nPertanyaan Pengguna: "${prompt}"`;
-        
-        for(let url of ENDPOINTS) {
+        const normalizedPrompt = prompt.trim();
+        if (!normalizedPrompt) return "Silakan tulis pertanyaan tentang kesehatan mata supaya Dr. Visage dapat membantu.";
+
+        const isRelated = eyeKeywords.some(keyword => normalizedPrompt.toLowerCase().includes(keyword));
+        if (!isRelated) {
+            return "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual.";
+        }
+
+        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nPertanyaan Pengguna: ${normalizedPrompt}\n\nJawaban:`;
+
+        if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
+            return "Maaf, kunci API Dr. Visage belum dikonfigurasi. Hubungi administrator untuk mengaktifkan layanan.";
+        }
+
+        const contentRequestBody = {
+            content: [{ type: 'text', text: fullPrompt }],
+            temperature: 0.2,
+            maxOutputTokens: 384,
+            topP: 0.8,
+            candidateCount: 1
+        };
+
+        const textRequestBody = {
+            prompt: { text: fullPrompt },
+            temperature: 0.2,
+            maxOutputTokens: 384,
+            topP: 0.8,
+            candidateCount: 1
+        };
+
+        for (let url of ENDPOINTS) {
             try {
-                const res = await fetch(url, { 
-                    method: "POST", 
-                    headers: { "Content-Type": "application/json" }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] }) 
+                const isTextEndpoint = url.includes(':generateText');
+                const body = isTextEndpoint ? JSON.stringify(textRequestBody) : JSON.stringify(contentRequestBody);
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body
                 });
-                
-                if(res.ok) {
-                    const data = await res.json();
-                    return data.candidates[0].content.parts[0].text;
+
+                const data = await res.json();
+                if (res.ok) {
+                    const answer = data?.candidates?.[0]?.content?.[0]?.text
+                        || data?.candidates?.[0]?.content?.parts?.[0]?.text
+                        || data?.output_text
+                        || data?.candidates?.[0]?.text
+                        || null;
+
+                    if (answer) {
+                        return answer.trim();
+                    }
+
+                    console.warn('Gemini respons tidak berbentuk yang diharapkan:', data);
                 }
-                
-                if(res.status === 404) {
+
+                if (res.status === 404) {
                     console.warn("Model API tidak ditemukan, mencoba fallback...");
-                    continue; 
+                    continue;
                 }
-            } catch(e) { 
-                console.error("Kesalahan jaringan:", e); 
+
+                console.warn('Gemini error response:', res.status, data);
+            } catch (e) {
+                console.error("Kesalahan jaringan:", e);
             }
         }
+
         return "Maaf Wisnu, koneksi sistem Dr. Visage ke server pusat sedang terputus. Pastikan Anda terhubung ke jaringan internet.";
     }
 

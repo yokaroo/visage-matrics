@@ -1,5 +1,8 @@
 // Landing page untuk user yang sudah login
 
+import { getCurrentUserProfile } from './auth-helper.js';
+import { supabase } from './supabaseClient.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     // =========================================================
@@ -69,17 +72,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // =========================================================
     // 4. LOGIKA LOGIN CHECK (dari Backend Session)
     // =========================================================
-    
-    // Periksa apakah user sudah login dari localStorage/sessionStorage
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true';
-    const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName') || 'Pengguna';
-    const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'user';
-    
-    if (!isLoggedIn) {
+    const currentUser = await getCurrentUserProfile();
+
+    if (!currentUser) {
         alert("Sesi telah habis atau Anda belum login!");
         window.location.href = '/index.html';
         return;
     }
+
+    const userName = currentUser.name || 'Pengguna';
+    const userRole = currentUser.role || 'user';
 
     // Periksa role - jika admin, redirect ke admin dashboard
     if (userRole.toLowerCase() === 'admin') {
@@ -91,9 +93,108 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elNama = document.getElementById('sidebar-nama');
     const dashNama = document.getElementById('dash-nama');
 
-    if (elNama) elNama.textContent = userName || "Pengguna";
-    if (dashNama) dashNama.textContent = userName || "Pengguna";
+    if (elNama) elNama.textContent = userName;
+    if (dashNama) dashNama.textContent = userName;
 
+    await loadUserDashboard();
+
+    async function loadUserDashboard() {
+        const dashboardApi = '/api/auth/user-dashboard';
+        const response = await fetch(dashboardApi, { credentials: 'include' });
+
+        if (!response.ok) {
+            console.warn('Gagal memuat dashboard user:', response.statusText);
+            return;
+        }
+
+        const payload = await response.json();
+        if (!payload || !payload.success) {
+            console.warn('Dashboard tidak tersedia:', payload);
+            return;
+        }
+
+        const stats = payload.stats || {};
+        const recentScans = payload.recent_scans || [];
+
+        const dashLastSeen = document.getElementById('dash-last-seen');
+        const dashStatus = document.getElementById('dash-status');
+        const dashStatusCard = document.getElementById('dash-status-card');
+        const dashSummary = document.getElementById('dash-summary');
+        const dashCriticalEar = document.getElementById('dash-critical-ear');
+        const dashAverageEar = document.getElementById('dash-average-ear');
+        const dashTotalCount = document.getElementById('dash-total-count');
+        const historyBody = document.getElementById('histori-table-body');
+
+        const formatDateTime = (value) => {
+            if (!value) return 'Tidak tersedia';
+            const date = new Date(value);
+            const today = new Date();
+            const isToday = date.toDateString() === today.toDateString();
+            const isYesterday = date.toDateString() === new Date(today.getTime() - 86400000).toDateString();
+            const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            if (isToday) return `Hari ini, ${time} WIB`;
+            if (isYesterday) return `Kemarin, ${time} WIB`;
+            return `${date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}, ${time} WIB`;
+        };
+
+        const normalizeStatus = (text) => {
+            if (!text) return 'Normal';
+            const normalized = text.toLowerCase();
+            if (normalized.includes('lelah') || normalized.includes('capek') || normalized.includes('fatigue')) return 'TERINDIKASI LELAH';
+            if (normalized.includes('optimal') || normalized.includes('segar')) return 'OPTIMAL';
+            return text.toUpperCase();
+        };
+
+        const statusLabel = normalizeStatus(stats.current_status || stats.status || 'Normal');
+        const isFatigue = statusLabel.includes('LELAH');
+
+        if (dashLastSeen) dashLastSeen.textContent = formatDateTime(stats.last_scan_at || stats.last_detected_at);
+        if (dashStatus) dashStatus.textContent = statusLabel;
+        if (dashStatusCard) {
+            dashStatusCard.classList.toggle('bg-red-50/90', isFatigue);
+            dashStatusCard.classList.toggle('border-red-200', isFatigue);
+            dashStatusCard.classList.toggle('text-red-600', isFatigue);
+            dashStatusCard.classList.toggle('bg-emerald-50/90', !isFatigue);
+            dashStatusCard.classList.toggle('border-emerald-200', !isFatigue);
+            dashStatusCard.classList.toggle('text-emerald-600', !isFatigue);
+        }
+
+        if (dashSummary) {
+            dashSummary.textContent = stats.summary || (isFatigue
+                ? 'Hasil deteksi terakhir menunjukkan potensi kelelahan mata. Coba istirahat sejenak.'
+                : 'Kondisi mata saat ini terlihat baik. Tetap pertahankan istirahat visual yang teratur.');
+        }
+
+        if (dashCriticalEar) dashCriticalEar.textContent = stats.critical_ear?.toFixed?.(3) ?? stats.critical_ear ?? '0.00';
+        if (dashAverageEar) dashAverageEar.textContent = stats.average_ear?.toFixed?.(3) ?? stats.average_ear ?? '0.00';
+        if (dashTotalCount) dashTotalCount.textContent = stats.total_analisis ?? 0;
+
+        if (historyBody) {
+            if (!recentScans.length) {
+                historyBody.innerHTML = `<tr class="border-b border-slate-100"><td colspan="3" class="py-8 px-4 text-center text-slate-400">Belum ada riwayat pemindaian.</td></tr>`;
+            } else {
+                historyBody.innerHTML = recentScans.map(scan => {
+                    const status = scan.status_mata || 'Normal';
+                    const isScanFatigue = status.toLowerCase().includes('lelah');
+                    const statusTag = isScanFatigue ? 'Lelah' : 'Optimal';
+                    const badgeBg = isScanFatigue ? 'bg-red-50' : 'bg-emerald-50';
+                    const badgeBorder = isScanFatigue ? 'border-red-100' : 'border-emerald-100';
+                    const badgeText = isScanFatigue ? 'text-red-600' : 'text-emerald-600';
+                    const badgeDot = isScanFatigue ? 'bg-red-500' : 'bg-emerald-500';
+                    return `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-4 font-bold text-slate-700">${formatDateTime(scan.created_at)}</td>
+                            <td class="py-4 px-4 font-mono text-slate-500">${scan.eye_closure?.toFixed?.(3) ?? scan.eye_closure ?? '-'}</td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center gap-2 px-3 py-1 ${badgeBg} ${badgeBorder} ${badgeText} text-[10px] font-black rounded-lg uppercase tracking-widest">
+                                    <span class="w-1.5 h-1.5 rounded-full ${badgeDot}"></span> ${statusTag}
+                                </span>
+                            </td>
+                        </tr>`;
+                }).join('');
+            }
+        }
+    }
 
     // =========================================================
     // 5. SIMPAN DATA PROFIL & GANTI SANDI
