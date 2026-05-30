@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Objek sementara penyimpan data
     let detectionData = {
         user_id: null,
+        nilai_ear: 0,
         blink_rate: 0,
         eye_closure: 0,
         head_tilt: 0,
@@ -56,8 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.btnSave.addEventListener('click', async function(e) {
             e.preventDefault(); 
 
-            if(!currentUser) {
-                alert("Sesi Anda telah habis, silakan login ulang.");
+            // Double-check session before attempting save
+            const user = await getCurrentUser();
+            if(!user || !currentUser) {
+                alert("Sesi Anda telah habis, silakan login ulang untuk melanjutkan analisis.");
+                window.location.href = "../../login.html";
+                return;
+            }
+
+            if(!detectionData.nilai_ear || detectionData.nilai_ear === 0) {
+                alert("Data analisis tidak lengkap. Silakan lakukan analisis terlebih dahulu.");
                 return;
             }
 
@@ -66,21 +75,62 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.btnSave.innerHTML = '<span class="inline-block animate-spin mr-2">⌛</span>Menyimpan...';
 
             try {
+                console.log('[SAVE] Attempting to save detection data:', detectionData);
+                
                 // Insert ke database Supabase
                 const { error } = await insertDeteksiMata(detectionData);
 
-                if (error) throw error;
+                if (error) {
+                    const errorMsg = error.message || String(error);
+                    console.error('[SAVE ERROR]', errorMsg);
+                    
+                    // Check if session expired or RLS error
+                    if (errorMsg.toLowerCase().includes('sesi') || 
+                        errorMsg.toLowerCase().includes('session') || 
+                        errorMsg.toLowerCase().includes('authentica') || 
+                        errorMsg.toLowerCase().includes('rls') ||
+                        errorMsg.includes('401') ||
+                        errorMsg.includes('403')) {
+                        
+                        alert("Sesi Anda telah habis atau akses ditolak. Silakan login ulang untuk melanjutkan.");
+                        window.location.href = "../../login.html";
+                        return;
+                    }
+                    throw error;
+                }
 
-                // Log aktivitas
-                await insertLogAktivitas({
-                    tipe_log: 'DETEKSI_MATA',
-                    deskripsi: `Hasil deteksi statis: ${detectionData.status_mata.toUpperCase()}`,
-                    user_id: currentUser.id
-                });
+                console.log('[SAVE SUCCESS] Detection saved successfully');
 
-                alert('Hasil klasifikasi berhasil disimpan ke database!');
+                // Log aktivitas - don't fail if log fails
+                try {
+                    await insertLogAktivitas({
+                        tipe_log: 'DETEKSI_MATA',
+                        deskripsi: `Analisis selesai: Status=${detectionData.status_mata.toUpperCase()}, EAR=${detectionData.nilai_ear}, AI=${detectionData.blink_rate}%`,
+                        user_id: currentUser.id
+                    });
+                    console.log('[LOG] Activity logged successfully');
+                } catch (logErr) {
+                    console.warn('[LOG WARNING] Could not log activity:', logErr);
+                    // Continue anyway - detection was saved
+                }
+
+                alert('✅ Hasil klasifikasi berhasil disimpan ke database!');
             } catch (err) {
-                alert('Gagal menyimpan hasil deteksi: ' + err.message);
+                const errorMsg = err.message || String(err);
+                console.error('[EXCEPTION]', errorMsg);
+                
+                if (errorMsg.toLowerCase().includes('sesi') || 
+                    errorMsg.toLowerCase().includes('session') || 
+                    errorMsg.toLowerCase().includes('authentica')) {
+                    alert("Sesi tidak valid. Silakan login ulang untuk melanjutkan.");
+                    window.location.href = "../../login.html";
+                } else if (errorMsg.toLowerCase().includes('rls') || 
+                           errorMsg.toLowerCase().includes('row-level security')) {
+                    alert("❌ Gagal menyimpan: Akses ditolak. Silakan logout dan login ulang.");
+                    window.location.href = "../../login.html";
+                } else {
+                    alert('❌ Gagal menyimpan hasil deteksi: ' + errorMsg);
+                }
             } finally {
                 elements.btnSave.disabled = false;
                 elements.btnSave.innerHTML = originalText;
@@ -139,15 +189,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOAD RESOURCES (MODEL) ---
     async function loadResources() {
         try {
-            // FIX: Path diarahkan ke folder models/
-            aiModel = await tf.loadLayersModel('models/model.json', {compile: false});
-            console.log("✅ TensorFlow: Model Hybrid Loaded.");
+            // Try absolute path first (served from assets static folder)
+            aiModel = await tf.loadLayersModel('/assets/models/web_model/model.json', {compile: false});
+            console.log("✅ TensorFlow: Model Hybrid Loaded (absolute path).");
             isModelLoaded = true;
             if (elements.imagePreview.complete && elements.imagePreview.naturalWidth > 0) {
                 enableAnalyzeButton();
             }
         } catch (err) {
-            console.error("❌ FATAL: Gagal memuat model CNN.", err);
+            console.warn("⚠️ Primary model path failed, trying relative path...", err);
+            try {
+                const rel = new URL('../../assets/models/web_model/model.json', window.location.href).href;
+                aiModel = await tf.loadLayersModel(rel, {compile: false});
+                console.log("✅ TensorFlow: Model Hybrid Loaded (relative path).");
+                isModelLoaded = true;
+                if (elements.imagePreview.complete && elements.imagePreview.naturalWidth > 0) {
+                    enableAnalyzeButton();
+                }
+            } catch (err2) {
+                console.error("❌ FATAL: Gagal memuat model CNN pada kedua path.", err2);
+            }
         }
 
         const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
@@ -270,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.resSegar.classList.add('hidden');
 
         // Menyusun Data untuk dikirim ke Database
+        detectionData.nilai_ear = parseFloat(avgEAR.toFixed(3));
         detectionData.eye_closure = parseFloat(avgEAR.toFixed(3));
         detectionData.blink_rate = parseFloat((finalAI * 100).toFixed(1));
         detectionData.head_tilt = 0; 
@@ -278,11 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.resSayu.classList.remove('hidden');
             elements.statusIndicator.style.backgroundColor = "#ef4444";
             detectionData.status_mata = 'lelah';
+            detectionData.durasi_sesi = 0; // Default session duration
             elements.resSayu.querySelector('p').innerHTML = `AI Confidence: <b>${(finalAI * 100).toFixed(1)}%</b><br>Eye Aspect Ratio: <b>${avgEAR.toFixed(3)}</b>`;
         } else {
             elements.resSegar.classList.remove('hidden');
             elements.statusIndicator.style.backgroundColor = "#10b981";
             detectionData.status_mata = 'segar';
+            detectionData.durasi_sesi = 0; // Default session duration
             elements.resSegar.querySelector('p').innerHTML = `Freshness Index: <b>${((1 - finalAI) * 100).toFixed(1)}%</b><br>Eye Aspect Ratio: <b>${avgEAR.toFixed(3)}</b>`;
         }
 

@@ -1,4 +1,6 @@
 // Login Page - Using Backend API
+import { supabase } from './supabaseClient.js';
+
 document.addEventListener("DOMContentLoaded", function() {
     const formLogin = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
@@ -25,12 +27,13 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             try {
-                // Kirim login request ke backend
+                // Kirim login request ke backend (include credentials so server session cookie is stored)
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         email: email,
                         password: password
@@ -55,6 +58,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     sessionStorage.setItem('userName', payload.user.name);
                 }
 
+                // Also sign-in the Supabase JS client so client-side pages using supabase.auth.getSession()
+                // will have a valid session. This keeps client and server sessions in sync.
+                try {
+                    const { data: supaData, error: supaError } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    if (supaError) {
+                        console.warn('[LOGIN] Supabase client sign-in warning:', supaError.message || supaError);
+                    }
+                } catch (supaErr) {
+                    console.warn('[LOGIN] Supabase client sign-in failed:', supaErr);
+                }
                 // Redirect berdasarkan role
                 setTimeout(() => {
                     if (payload.user.role && payload.user.role.toLowerCase() === 'admin') {

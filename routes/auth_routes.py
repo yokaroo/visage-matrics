@@ -23,10 +23,11 @@ try:
     from supabase import create_client, Client
     
     SUPABASE_URL = os.getenv('SUPABASE_URL')
-    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+    # Prefer a server-side service role key for backend operations; fall back to SUPABASE_KEY if not provided
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('SUPABASE_KEY')
     
-    if SUPABASE_URL and SUPABASE_KEY:
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
         logger.info("[OK] Supabase client initialized")
     else:
         logger.error("[ERROR] Missing SUPABASE_URL or SUPABASE_KEY in .env")
@@ -225,6 +226,89 @@ def logout():
     except Exception as e:
         logger.exception("[ERROR] Error during logout")
         return jsonify({'error': 'Logout failed'}), 500
+
+
+@auth_bp.route('/profile', methods=['PUT', 'POST'])
+def update_profile():
+    """Update current user profile"""
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        data = request.get_json() or {}
+        user_id = session['user_id']
+
+        profile_updates = {}
+        for key in ['nama_lengkap', 'nim', 'jenis_kelamin', 'prodi']:
+            if key in data:
+                profile_updates[key] = data[key]
+
+        if profile_updates:
+            try:
+                # Fetch existing profile to avoid violating NOT NULL constraints on upsert
+                existing_profile = None
+                try:
+                    resp = supabase.table('profil_pengguna').select('*').eq('id', user_id).execute()
+                    existing_profile = resp.data[0] if getattr(resp, 'data', None) else None
+                except Exception as fetch_err:
+                    logger.warning(f"[WARNING] Could not fetch existing profile for merge: {fetch_err}")
+
+                # Build merged payload: prefer incoming updates, fall back to existing values or safe defaults
+                merged = {
+                    'id': user_id,
+                    'nama_lengkap': profile_updates.get('nama_lengkap') if 'nama_lengkap' in profile_updates else (existing_profile.get('nama_lengkap') if existing_profile else ''),
+                    'nim': profile_updates.get('nim') if 'nim' in profile_updates else (existing_profile.get('nim') if existing_profile else ''),
+                    'jenis_kelamin': profile_updates.get('jenis_kelamin') if 'jenis_kelamin' in profile_updates else (existing_profile.get('jenis_kelamin') if existing_profile else ''),
+                    'prodi': profile_updates.get('prodi') if 'prodi' in profile_updates else (existing_profile.get('prodi') if existing_profile else ''),
+                    'usia': profile_updates.get('usia') if 'usia' in profile_updates else (existing_profile.get('usia') if existing_profile else 0),
+                    'angkatan': profile_updates.get('angkatan') if 'angkatan' in profile_updates else (existing_profile.get('angkatan') if existing_profile else 0),
+                    'status_akun': existing_profile.get('status_akun') if existing_profile and existing_profile.get('status_akun') else 'aktif',
+                    'role': existing_profile.get('role') if existing_profile and existing_profile.get('role') else 'mahasiswa'
+                }
+
+                # Ensure numeric fields are proper types
+                try:
+                    merged['usia'] = int(merged.get('usia') or 0)
+                except Exception:
+                    merged['usia'] = 0
+                try:
+                    merged['angkatan'] = int(merged.get('angkatan') or 0)
+                except Exception:
+                    merged['angkatan'] = 0
+
+                profile_result = supabase.table('profil_pengguna').upsert(merged, on_conflict='id').execute()
+                if getattr(profile_result, 'error', None):
+                    logger.warning(f"[WARNING] Profile update error for {user_id}: {profile_result.error}")
+                    return jsonify({'error': str(profile_result.error)}), 500
+            except Exception as update_err:
+                logger.exception(f"[ERROR] Could not update user profile for {user_id}")
+                return jsonify({'error': 'Gagal menyimpan profil pengguna'}), 500
+
+        if 'password' in data and data['password']:
+            new_password = data['password']
+            if len(new_password) < 6:
+                return jsonify({'error': 'Kata sandi baru minimal 6 karakter'}), 400
+            try:
+                pwd_result = supabase.auth.admin.update_user_by_id(user_id, {'password': new_password})
+                if getattr(pwd_result, 'error', None):
+                    logger.warning(f"[WARNING] Password update error for {user_id}: {pwd_result.error}")
+                    return jsonify({'error': 'Gagal memperbarui kata sandi. Silakan login ulang dan coba lagi.'}), 500
+            except Exception as pwd_err:
+                logger.warning(f"[WARNING] Could not update password for {user_id}: {str(pwd_err)}")
+                return jsonify({'error': 'Gagal memperbarui kata sandi. Silakan login ulang dan coba lagi.'}), 500
+
+        # Sync session values with the latest profile data
+        if 'nama_lengkap' in profile_updates:
+            session['user_name'] = profile_updates['nama_lengkap']
+
+        return jsonify({'success': True, 'message': 'Profil berhasil diperbarui.'}), 200
+
+    except Exception as e:
+        logger.exception("[ERROR] Error updating profile")
+        return jsonify({'error': 'Server error saat memperbarui profil'}), 500
 
 
 @auth_bp.route('/profile', methods=['GET'])

@@ -7,6 +7,9 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime, timedelta
 import json
 
+# Import Supabase client from auth routes to allow server-side inserts
+from routes.auth_routes import supabase
+
 # Create blueprint
 analytics_bp = Blueprint('analytics', __name__, url_prefix='/api/analytics')
 
@@ -154,44 +157,110 @@ def get_analytics_summary():
 @analytics_bp.route('/save-detection', methods=['POST'])
 def save_detection():
     """
-    Save a detection record
-    Expected JSON: {
-        "detection_type": "fatigue" or "normal",
-        "confidence": 0.0-1.0,
-        "metadata": {...}
+    Save a detection record to Supabase deteksi_mata table
+    Expected JSON:
+    {
+        "nilai_ear": number (required),
+        "blink_rate": number,
+        "eye_closure": number,
+        "head_tilt": number,
+        "status_mata": string (required),
+        "durasi_sesi": number
     }
     """
     try:
         if 'user_id' not in session:
-            return jsonify({'error': 'Not authenticated'}), 401
-        
-        data = request.get_json()
-        
-        if not data or 'detection_type' not in data:
-            return jsonify({'error': 'Missing required fields'}), 400
-        
+            return jsonify({'error': 'Sesi telah habis. Silakan login ulang untuk melanjutkan.', 'session_expired': True}), 401
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        data = request.get_json() or {}
+        required_fields = ['nilai_ear', 'status_mata']
+        if any(field not in data for field in required_fields):
+            return jsonify({'error': f'Missing required fields: {required_fields}'}), 400
+
         user_id = session['user_id']
-        detection_record = {
+        
+        # Build record with required fields
+        record = {
             'user_id': user_id,
-            'detection_type': data['detection_type'],
-            'confidence': data.get('confidence', 0.0),
-            'timestamp': datetime.now().isoformat(),
-            'metadata': data.get('metadata', {})
+            'nilai_ear': float(data.get('nilai_ear', 0)),
+            'blink_rate': float(data.get('blink_rate', 0)),
+            'eye_closure': float(data.get('eye_closure', 0)),
+            'head_tilt': float(data.get('head_tilt', 0)),
+            'status_mata': str(data.get('status_mata', 'normal')).lower(),
+            'durasi_sesi': int(data.get('durasi_sesi', 0))
         }
-        
-        # Store in database (mock implementation)
-        if user_id not in analytics_db:
-            analytics_db[user_id] = []
-        
-        analytics_db[user_id].append(detection_record)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Detection saved successfully'
-        }), 201
-        
+
+        try:
+            result = supabase.table('deteksi_mata').insert([record]).execute()
+            if getattr(result, 'error', None):
+                error_msg = str(result.error)
+                if 'row-level security' in error_msg.lower() or '42501' in error_msg:
+                    return jsonify({'error': 'Akses ditolak: Silakan login ulang untuk melanjutkan.', 'code': 42501}), 403
+                return jsonify({'error': error_msg}), 500
+
+            return jsonify({'success': True, 'message': 'Detection saved successfully'}), 201
+        except Exception as db_err:
+            error_msg = str(db_err)
+            if 'row-level security' in error_msg.lower() or '42501' in error_msg:
+                return jsonify({'error': 'RLS Policy Error: Silakan login ulang.', 'session_expired': True}), 403
+            raise
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = str(e)
+        if 'session' in error_msg.lower() or 'authenticated' in error_msg.lower():
+            return jsonify({'error': 'Sesi tidak valid. Silakan login ulang.', 'session_expired': True}), 401
+        return jsonify({'error': error_msg}), 500
+
+
+@analytics_bp.route('/save-log', methods=['POST'])
+def save_log():
+    """
+    Save an activity log record to Supabase log_aktivitas table
+    Expected JSON: {
+        "tipe_log": string,
+        "deskripsi": string
+    }
+    """
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Sesi telah habis. Silakan login ulang untuk melanjutkan.', 'session_expired': True}), 401
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        data = request.get_json() or {}
+        if not data.get('tipe_log') or not data.get('deskripsi'):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        user_id = session['user_id']
+        log_record = {
+            'user_id': user_id,
+            'tipe_log': data['tipe_log'],
+            'deskripsi': data['deskripsi']
+        }
+
+        try:
+            result = supabase.table('log_aktivitas').insert([log_record]).execute()
+            if getattr(result, 'error', None):
+                error_msg = str(result.error)
+                if 'row-level security' in error_msg.lower() or '42501' in error_msg:
+                    return jsonify({'error': 'Akses ditolak: Silakan login ulang.', 'session_expired': True}), 403
+                return jsonify({'error': error_msg}), 500
+
+            return jsonify({'success': True, 'message': 'Log saved successfully'}), 201
+        except Exception as db_err:
+            error_msg = str(db_err)
+            if 'row-level security' in error_msg.lower() or '42501' in error_msg:
+                return jsonify({'error': 'RLS Policy Error: Silakan login ulang.', 'session_expired': True}), 403
+            raise
+    except Exception as e:
+        error_msg = str(e)
+        if 'session' in error_msg.lower() or 'authenticated' in error_msg.lower():
+            return jsonify({'error': 'Sesi tidak valid. Silakan login ulang.', 'session_expired': True}), 401
+        return jsonify({'error': error_msg}), 500
+
 
 @analytics_bp.route('/export/<period>', methods=['GET'])
 def export_analytics(period):

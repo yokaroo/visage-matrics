@@ -1,7 +1,6 @@
 // Landing page untuk user yang sudah login
 
 import { getCurrentUserProfile } from './auth-helper.js';
-import { supabase } from './supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -221,34 +220,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             const confirmPassword = document.getElementById('edit-confirm-password')?.value;
 
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) throw new Error("Sesi tidak valid, silakan login ulang.");
-                
-                // 1. Ganti Kata Sandi (Jika diisi)
+                const body = {
+                    nama_lengkap: newNama,
+                    nim: newNim,
+                    prodi: newProdi,
+                    jenis_kelamin: newJk
+                };
+
                 if (newPassword) {
                     if (newPassword !== confirmPassword) throw new Error("Konfirmasi sandi baru tidak cocok!");
                     if (newPassword.length < 6) throw new Error("Kata sandi baru minimal 6 karakter!");
-                    
-                    const { error: authError } = await supabase.auth.updateUser({ password: newPassword });
-                    if (authError) throw authError;
+                    body.password = newPassword;
+                }
 
+                const response = await fetch('/api/auth/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Gagal menyimpan profil. Silakan coba lagi.');
+                }
+
+                if (newPassword) {
                     document.getElementById('edit-old-password').value = '';
                     document.getElementById('edit-new-password').value = '';
                     document.getElementById('edit-confirm-password').value = '';
                 }
-
-                // 2. Simpan Data Profil
-                const { error: updateError } = await supabase
-                    .from('profil_pengguna')
-                    .upsert({
-                        id: session.user.id,
-                        nama_lengkap: newNama,
-                        nim: newNim,
-                        prodi: newProdi,
-                        jenis_kelamin: newJk
-                    }, { onConflict: 'id' });
-
-                if (updateError) throw updateError;
 
                 // Update UI Langsung
                 const elNama = document.getElementById('sidebar-nama');

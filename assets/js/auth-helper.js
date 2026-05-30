@@ -42,6 +42,7 @@ export async function loginWithApi(email, password) {
         headers: {
             'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
     });
 
@@ -236,26 +237,25 @@ export async function updateProfilPengguna(userId, updates) {
  * @param {Object} detectionData - {blink_rate, eye_closure, head_tilt, status_mata, durasi_sesi}
  */
 export async function insertDeteksiMata(detectionData) {
-    const user = await getCurrentUser();
+    const response = await fetch('/api/analytics/save-detection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(detectionData)
+    });
+
+    const payload = await response.json().catch(() => null);
     
-    if (!user) {
-        return { error: 'User tidak ditemukan. Silakan login terlebih dahulu.' };
+    // Check for session expired or auth issues
+    if (response.status === 401 || response.status === 403) {
+        return { error: new Error(payload?.error || 'Sesi tidak valid, silakan login ulang.') };
+    }
+    
+    if (!response.ok) {
+        return { error: new Error(payload?.error || 'Gagal menyimpan hasil deteksi') };
     }
 
-    const { error } = await supabase
-        .from('deteksi_mata')
-        .insert([
-            {
-                user_id: user.id,
-                blink_rate: detectionData.blink_rate,
-                eye_closure: detectionData.eye_closure,
-                head_tilt: detectionData.head_tilt,
-                status_mata: detectionData.status_mata,
-                durasi_sesi: detectionData.durasi_sesi || 0
-            }
-        ]);
-
-    return { error };
+    return { error: null };
 }
 
 /**
@@ -332,25 +332,25 @@ export async function getDeteksiMata30Hari(userId) {
  * @param {Object} logData - {tipe_log, deskripsi, user_id (optional)}
  */
 export async function insertLogAktivitas(logData) {
-    let userId = logData.user_id;
+    const response = await fetch('/api/analytics/save-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(logData)
+    });
+
+    const payload = await response.json().catch(() => null);
     
-    // Jika user_id tidak diberikan, coba ambil dari current user
-    if (!userId) {
-        const user = await getCurrentUser();
-        userId = user ? user.id : null;
+    // Check for session expired or auth issues
+    if (response.status === 401 || response.status === 403) {
+        return { error: new Error(payload?.error || 'Sesi tidak valid, silakan login ulang.') };
+    }
+    
+    if (!response.ok) {
+        return { error: new Error(payload?.error || 'Gagal menyimpan log aktivitas') };
     }
 
-    const { error } = await supabase
-        .from('log_aktivitas')
-        .insert([
-            {
-                tipe_log: logData.tipe_log,
-                deskripsi: logData.deskripsi,
-                user_id: userId
-            }
-        ]);
-
-    return { error };
+    return { error: null };
 }
 
 /**
