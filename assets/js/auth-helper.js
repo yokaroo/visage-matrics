@@ -150,7 +150,7 @@ export async function getUserEmail() {
 export async function redirectIfNotAuthenticated() {
     const user = await getCurrentUserProfile();
     if (!user) {
-        window.location.href = '/';
+        window.location.href = '/login.html';
         return false;
     }
     return true;
@@ -162,7 +162,7 @@ export async function redirectIfNotAuthenticated() {
 export async function redirectByRole() {
     const user = await getCurrentUserProfile();
     if (!user) {
-        window.location.href = '/';
+        window.location.href = '/login.html';
         return;
     }
 
@@ -179,7 +179,7 @@ export async function redirectByRole() {
 export async function requireAdmin() {
     const user = await getCurrentUserProfile();
     if (!user) {
-        window.location.href = '/';
+        window.location.href = '/login.html';
         return false;
     }
     if (user.role?.toLowerCase() !== 'admin') {
@@ -195,7 +195,7 @@ export async function requireAdmin() {
 export async function requireUser() {
     const user = await getCurrentUserProfile();
     if (!user) {
-        window.location.href = '/';
+        window.location.href = '/login.html';
         return false;
     }
     if (user.role?.toLowerCase() === 'admin') {

@@ -188,4 +188,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Jalankan pertama kali
     fetchUsersData();
+
+    // --- 5. EXPORT HANDLERS ---
+    const downloadBlob = (blob, filename) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const btnCsv = document.getElementById('btn-download-users-csv');
+    const btnXlsx = document.getElementById('btn-download-users-xlsx');
+
+    if (btnCsv) btnCsv.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/analytics/admin/export-users?format=csv', { credentials: 'include' });
+            if (!res.ok) throw new Error('Gagal mengunduh data (CSV)');
+            const text = await res.blob();
+            downloadBlob(text, 'users.csv');
+        } catch (err) {
+            alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+        }
+    });
+
+    if (btnXlsx) btnXlsx.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/analytics/admin/export-users?format=xlsx', { credentials: 'include' });
+            if (!res.ok) throw new Error('Gagal mengunduh data (XLSX)');
+            const blob = await res.blob();
+            downloadBlob(blob, 'users.xlsx');
+        } catch (err) {
+            alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+        }
+    });
 });

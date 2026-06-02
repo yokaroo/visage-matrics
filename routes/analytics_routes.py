@@ -6,6 +6,9 @@ Handles analytics data, reports, and statistics
 from flask import Blueprint, request, jsonify, session
 from datetime import datetime, timedelta
 import json
+import pandas as pd
+import io
+from flask import make_response
 
 # Import Supabase client from auth routes to allow server-side inserts
 from routes.auth_routes import supabase
@@ -321,3 +324,97 @@ def get_health_report():
 def register_analytics_routes(app):
     """Register analytics routes with Flask app"""
     app.register_blueprint(analytics_bp)
+
+
+@analytics_bp.route('/admin/export-users', methods=['GET'])
+def export_users():
+    """Export profil_pengguna as CSV or XLSX (admin only). Query param: ?format=csv|xlsx"""
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+        if session.get('user_role') != 'admin':
+            return jsonify({'error': 'Forbidden'}), 403
+
+        out_format = request.args.get('format', 'csv').lower()
+
+        result = supabase.table('profil_pengguna').select('*').execute()
+        data = getattr(result, 'data', []) or []
+
+        df = pd.DataFrame(data)
+
+        if out_format == 'xlsx':
+            buf = io.BytesIO()
+            with pd.ExcelWriter(buf, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='users')
+            buf.seek(0)
+            resp = make_response(buf.read())
+            resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            resp.headers['Content-Disposition'] = 'attachment; filename=users.xlsx'
+            return resp
+        else:
+            csv_buf = io.StringIO()
+            df.to_csv(csv_buf, index=False)
+            csv_buf.seek(0)
+            resp = make_response(csv_buf.getvalue())
+            resp.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            resp.headers['Content-Disposition'] = 'attachment; filename=users.csv'
+            return resp
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@analytics_bp.route('/export/detections', methods=['GET'])
+def export_detections():
+    """Export deteksi_mata joined with profil_pengguna. Query params: format=csv|xlsx, period=7|30|all"""
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+        if session.get('user_role') != 'admin':
+            return jsonify({'error': 'Forbidden'}), 403
+
+        out_format = request.args.get('format', 'csv').lower()
+        period = request.args.get('period', '7')
+
+        query = supabase.table('deteksi_mata').select('*, profil_pengguna(*)')
+
+        if period in ['7', '30']:
+            days = int(period)
+            since = (datetime.now() - timedelta(days=days)).isoformat()
+            query = query.gte('created_at', since)
+
+        result = query.order('created_at', {'ascending': True}).execute()
+        data = getattr(result, 'data', []) or []
+
+        # Normalize flattened structure for pandas
+        rows = []
+        for r in data:
+            base = {k: v for k, v in r.items() if k != 'profil_pengguna'}
+            profile = r.get('profil_pengguna') or {}
+            # merge profile fields prefixed
+            for pk, pv in profile.items():
+                base[f'profil_{pk}'] = pv
+            rows.append(base)
+
+        df = pd.DataFrame(rows)
+
+        if out_format == 'xlsx':
+            buf = io.BytesIO()
+            with pd.ExcelWriter(buf, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='detections')
+            buf.seek(0)
+            resp = make_response(buf.read())
+            resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            resp.headers['Content-Disposition'] = f'attachment; filename=detections_{period}.xlsx'
+            return resp
+        else:
+            csv_buf = io.StringIO()
+            df.to_csv(csv_buf, index=False)
+            csv_buf.seek(0)
+            resp = make_response(csv_buf.getvalue())
+            resp.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            resp.headers['Content-Disposition'] = f'attachment; filename=detections_{period}.csv'
+            return resp
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

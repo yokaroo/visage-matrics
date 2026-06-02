@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!currentUser) {
         alert("Sesi telah habis atau Anda belum login!");
-        window.location.href = '/index.html';
+        window.location.href = '/login.html';
         return;
     }
 

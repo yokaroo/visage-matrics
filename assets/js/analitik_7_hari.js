@@ -123,4 +123,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             tbody.appendChild(tr);
         });
     }
+
+    // --- EXPORT HANDLERS ---
+    const downloadBlob = (blob, filename) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const btnCsv = document.getElementById('btn-download-analytics-csv');
+    const btnXlsx = document.getElementById('btn-download-analytics-xlsx');
+
+    if (btnCsv) btnCsv.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/analytics/export/detections?format=csv&period=7', { credentials: 'include' });
+            if (!res.ok) throw new Error('Gagal mengunduh data analitik (CSV)');
+            const blob = await res.blob();
+            downloadBlob(blob, 'analytics_7days.csv');
+        } catch (err) {
+            alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+        }
+    });
+
+    if (btnXlsx) btnXlsx.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/analytics/export/detections?format=xlsx&period=7', { credentials: 'include' });
+            if (!res.ok) throw new Error('Gagal mengunduh data analitik (XLSX)');
+            const blob = await res.blob();
+            downloadBlob(blob, 'analytics_7days.xlsx');
+        } catch (err) {
+            alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+        }
+    });
 });
