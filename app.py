@@ -234,6 +234,25 @@ def register_page_html():
         print(f"Error serving register page: {e}")
         return jsonify({'error': 'Register page not found'}), 404
 
+# ===== SEO & CRAWLER ROUTES =====
+@app.route('/sitemap.xml')
+def serve_sitemap():
+    """Serve sitemap.xml for search engines"""
+    try:
+        return send_from_directory(app.root_path, 'sitemap.xml')
+    except Exception as e:
+        print(f"Error serving sitemap: {e}")
+        return jsonify({'error': 'Sitemap not found'}), 404
+
+@app.route('/robots.txt')
+def serve_robots():
+    """Serve robots.txt for search engines"""
+    try:
+        return send_from_directory(app.root_path, 'robots.txt')
+    except Exception as e:
+        print(f"Error serving robots.txt: {e}")
+        return jsonify({'error': 'Robots.txt not found'}), 404
+    
 # ===== USER PAGES =====
 @app.route('/user/landing')
 def user_landing():
