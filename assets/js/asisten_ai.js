@@ -1,5 +1,5 @@
 // IMPORT API KEY DARI FILE RAHASIA
-import { GEMINI_API_KEY } from './config.js';
+import { GEMINI_API_KEYS } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -8,27 +8,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     
     // Fallback Endpoint: Jika model preview mati, sistem akan turun ke model stabil
-    const ENDPOINTS = [
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateText?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateText?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateText?key=${GEMINI_API_KEY}`,
-        // Backup paling aman jika model terbaru error/dihapus google:
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateText?key=${GEMINI_API_KEY}`
+    const GEMINI_MODELS = [
+        'gemini-3-flash-preview',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash'
     ];
+
+    function getRandomGeminiKey() {
+        if (!Array.isArray(GEMINI_API_KEYS) || GEMINI_API_KEYS.length === 0) return '';
+        const index = Math.floor(Math.random() * GEMINI_API_KEYS.length);
+        return GEMINI_API_KEYS[index];
+    }
+
+    function buildGeminiEndpoint(model) {
+        const key = getRandomGeminiKey();
+        return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateText?key=${key}`;
+    }
 
     // INSTRUKSI KETAT (GUARDRAIL) UNTUK AI
     const SYSTEM_INSTRUCTION = `Anda adalah Dr. Visage AI, asisten medis virtual spesialis kesehatan mata dari platform Visage Metrics.
 ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
-1. Jawab pertanyaan pengguna secara langsung dan spesifik sesuai topik kesehatan mata, kelelahan mata (Digital Eye Strain), penglihatan, dan ergonomi layar.
-2. Jika pengguna bertanya tentang hal di luar topik kesehatan mata, jawab dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual."
-3. Jangan menambahkan informasi tidak relevan atau pengantar panjang; fokus pada solusi konkret atau jawaban langsung.
-4. Gunakan bahasa Indonesia yang profesional, empatik, mudah dimengerti oleh mahasiswa.
-5. Jawab maksimal dalam 2 paragraf pendek.
-6. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.`;
+1. Jawab pertanyaan pengguna secara langsung dan spesifik sesuai topik kesehatan mata, kelelahan visual, kelelahan membaca, ergonomi belajar, dan kebiasaan membaca di perpustakaan.
+2. Berikan solusi praktis untuk keluhan seperti mata perih, mata kering, pandangan kabur, sakit kepala, atau sensasi lelah saat membaca, belajar, atau menggunakan gadget.
+3. Jika pengguna bertanya tentang hal di luar topik kesehatan mata, jawab dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata, kelelahan visual, dan kebiasaan membaca."
+4. Jangan menambahkan informasi tidak relevan atau pengantar panjang; fokus pada rekomendasi singkat dan mudah diikuti.
+5. Gunakan bahasa Indonesia yang profesional, empatik, dan sesuai untuk mahasiswa.
+6. Jawab maksimal dalam 2 paragraf pendek.
+7. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.`;
+
+    const eyeKeywords = [
+        "mata","perih","lelah","kelelahan","kabur","silau","pusing","layar","laptop","monitor","handphone",
+        "smartphone","tablet","membaca","buku","perpustakaan","kerja","tugas","belajar","ergonomi",
+        "istirahat","kelopak","kering","pandangan","komputer","visi","nyeri","digital eye strain",
+        "postur","kacamata","fokus","skripsi","makalah","fatigue"
+    ];
+
+    function getStaticAnswer(normalizedPrompt) {
+        const promptLower = normalizedPrompt.toLowerCase();
+
+        if (/\b(membaca|buku|perpustakaan|belajar|tugas|skripsi|makalah|catatan)\b/.test(promptLower)) {
+            return "Saat membaca atau belajar lama, jaga jarak buku atau layar minimal 40-50 cm dari mata dan lakukan istirahat singkat setiap 20 menit. Coba aturan 20-20-20: setiap 20 menit, lihat objek sejauh 6 meter selama 20 detik untuk meredakan ketegangan mata.";
+        }
+
+        if (/\b(layar|laptop|monitor|handphone|smartphone|tablet|gadget)\b/.test(promptLower)) {
+            return "Untuk mengurangi kelelahan mata akibat layar, atur kecerahan agar tidak terlalu terang dan gunakan pencahayaan ruangan lembut. Istirahatkan mata setiap 20 menit, berkedip lebih sering, dan posisikan layar sejajar atau sedikit di bawah tingkat mata.";
+        }
+
+        if (/\b(kelelahan|letih|capek|lelah)\b/.test(promptLower)) {
+            return "Kelelahan visual sering terjadi karena mata terus fokus pada teks atau layar tanpa istirahat. Coba lakukan jeda singkat setiap 20 menit dan pastikan pencahayaan tidak membuat mata bekerja lebih keras.";
+        }
+
+        if (/\b(perih|kering|kabur|pusing|sakit kepala|nyeri|panas|bau)\b/.test(promptLower)) {
+            return "Gejala seperti mata perih, kering, kabur, atau sakit kepala biasanya disebabkan oleh ketegangan visual. Istirahatkan mata secara teratur, berkedip lebih sering, dan pastikan penerangan cukup tanpa silau langsung.";
+        }
+
+        return "Mata lelah saat membaca atau berada di perpustakaan umumnya dapat diatasi dengan istirahat teratur, pencahayaan yang tepat, dan memastikan jarak pandang yang nyaman. Jika keluhan terus berlanjut, konsultasikan dengan tenaga medis.";
+    }
 
     // ==========================================
     // 2. REFERENSI ELEMEN DOM
@@ -96,9 +132,6 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     // 5. FUNGSI FILTER OOT & FETCH API GEMINI
     // ==========================================
     
-    // Kata Kunci Sederhana Untuk Pengecekan Awal
-    const eyeKeywords = ["mata", "perih", "lelah", "kabur", "silau", "pusing", "layar", "kacamata", "tidur", "istirahat", "rabun", "ear", "visage"];
-
     async function getAIResponse(prompt) {
         const normalizedPrompt = prompt.trim();
         if (!normalizedPrompt) return "Silakan tulis pertanyaan tentang kesehatan mata supaya Dr. Visage dapat membantu.";
@@ -110,19 +143,11 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 
         const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nPertanyaan Pengguna: ${normalizedPrompt}\n\nJawaban:`;
 
-        if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
-            return "Maaf, kunci API Dr. Visage belum dikonfigurasi. Hubungi administrator untuk mengaktifkan layanan.";
+        if (!Array.isArray(GEMINI_API_KEYS) || GEMINI_API_KEYS.length === 0) {
+            return getStaticAnswer(normalizedPrompt);
         }
 
-        const contentRequestBody = {
-            content: [{ type: 'text', text: fullPrompt }],
-            temperature: 0.2,
-            maxOutputTokens: 384,
-            topP: 0.8,
-            candidateCount: 1
-        };
-
-        const textRequestBody = {
+        const requestBody = {
             prompt: { text: fullPrompt },
             temperature: 0.2,
             maxOutputTokens: 384,
@@ -130,19 +155,19 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             candidateCount: 1
         };
 
-        for (let url of ENDPOINTS) {
+        for (let model of GEMINI_MODELS) {
+            const url = buildGeminiEndpoint(model);
             try {
-                const isTextEndpoint = url.includes(':generateText');
-                const body = isTextEndpoint ? JSON.stringify(textRequestBody) : JSON.stringify(contentRequestBody);
                 const res = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await res.json();
                 if (res.ok) {
-                    const answer = data?.candidates?.[0]?.content?.[0]?.text
+                    const answer = data?.candidates?.[0]?.output
+                        || data?.candidates?.[0]?.content?.[0]?.text
                         || data?.candidates?.[0]?.content?.parts?.[0]?.text
                         || data?.output_text
                         || data?.candidates?.[0]?.text
@@ -166,7 +191,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             }
         }
 
-        return "Maaf Wisnu, koneksi sistem Dr. Visage ke server pusat sedang terputus. Pastikan Anda terhubung ke jaringan internet.";
+        return getStaticAnswer(normalizedPrompt);
     }
 
     // ==========================================
