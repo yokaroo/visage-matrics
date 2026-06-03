@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 
 import tensorflow as tf
-from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
@@ -532,6 +532,28 @@ def serve_css(filename):
         return send_from_directory('assets/css', filename)
     except:
         return jsonify({'error': 'CSS file not found'}), 404
+
+@app.route('/assets/js/config.js')
+def serve_config_js():
+    """Serve dynamic JS config from environment variables"""
+    gemini_api_keys = os.getenv('GEMINI_API_KEYS')
+    if gemini_api_keys:
+        try:
+            parsed_keys = json.loads(gemini_api_keys)
+            if not isinstance(parsed_keys, list):
+                parsed_keys = [str(parsed_keys)]
+        except Exception:
+            parsed_keys = [gemini_api_keys]
+    else:
+        default_key = os.getenv('GEMINI_API_KEY', '')
+        parsed_keys = [default_key] if default_key else []
+
+    config_js = (
+        f"export const GEMINI_API_KEYS = {json.dumps(parsed_keys)};\n"
+        f"export const GEMINI_API_KEY = GEMINI_API_KEYS.length > 0 ? GEMINI_API_KEYS[0] : '';\n"
+    )
+    return Response(config_js, mimetype='application/javascript')
+
 
 @app.route('/assets/js/<path:filename>')
 def serve_js(filename):
