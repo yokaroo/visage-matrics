@@ -366,7 +366,7 @@ def export_users():
 
 @analytics_bp.route('/export/detections', methods=['GET'])
 def export_detections():
-    """Export deteksi_mata joined with profil_pengguna. Query params: format=csv|xlsx, period=7|30|all"""
+    """Export deteksi_mata joined with profil_pengguna. Query params: format=csv|xlsx, period=today|7|30|all"""
     try:
         if 'user_id' not in session:
             return jsonify({'error': 'Not authenticated'}), 401
@@ -378,7 +378,10 @@ def export_detections():
 
         query = supabase.table('deteksi_mata').select('*, profil_pengguna(*)')
 
-        if period in ['7', '30']:
+        if period == 'today':
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+            query = query.gte('created_at', today)
+        elif period in ['7', '30']:
             days = int(period)
             since = (datetime.now() - timedelta(days=days)).isoformat()
             query = query.gte('created_at', since)

@@ -141,8 +141,8 @@
                     <p class="text-[10px] text-sky-600 font-bold uppercase tracking-widest">ID: ADM-001</p>
                 </div>
             </div>
-            <button onclick="window.location.replace('../../login.html');"
-                class="w-full py-3 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all tracking-[0.2em] text-[10px] uppercase flex justify-center items-center gap-2 shadow-sm">Logout</button>
+            <button id="btn-logout-admin"
+                class="w-full py-3 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all tracking-[0.2em] text-[10px] uppercase flex justify-center items-center shadow-sm">Logout</button>
         </div>
     </aside>
 
@@ -203,6 +203,12 @@
                         <h3 class="text-xl font-black text-slate-800">Riwayat Klasifikasi</h3>
                         <p class="text-xs text-slate-500 font-medium mt-1">Daftar riwayat pemrosesan gambar dan hasil
                             deteksi (Hari Ini)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-download-analytics-csv"
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold">Unduh CSV</button>
+                        <button id="btn-download-analytics-xlsx"
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold">Unduh XLSX</button>
                     </div>
                 </div>
 

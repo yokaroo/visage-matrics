@@ -154,35 +154,86 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (dataHariIni.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400 font-medium">Belum ada data deteksi hari ini.</td></tr>';
-            return;
+        } else {
+            dataHariIni.forEach(row => {
+                const dateObj = new Date(row.created_at);
+                const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+                
+                const nama = row.profil_pengguna?.nama_lengkap || 'Unknown User';
+                const nim = row.profil_pengguna?.nim || 'N/A';
+                const prodi = row.profil_pengguna?.prodi || '-';
+                const isSayu = row.status_mata.toLowerCase() === 'lelah';
+                
+                // EAR kita ambil dari kolom eye_closure (sesuai trik sebelumnya)
+                const earScore = row.eye_closure || 0; 
+                const earText = isSayu ? `<span class="text-[10px] text-red-400">(Low)</span>` : `<span class="text-[10px] text-emerald-400">(Normal)</span>`;
+                const statusBadge = isSayu 
+                    ? `<span class="px-3 py-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded-md tracking-widest uppercase">Mata Sayu</span>`
+                    : `<span class="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-md tracking-widest uppercase">Mata Segar</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition cursor-pointer group';
+                tr.innerHTML = `
+                    <td class="py-4 px-4 text-slate-500 font-medium">Hari Ini<br><span class="text-[10px] font-bold text-slate-400">${timeStr}</span></td>
+                    <td class="py-4 px-4"><p class="font-bold text-slate-800">${nama}</p><p class="text-[10px] text-slate-500 font-mono">${nim}</p></td>
+                    <td class="py-4 px-4 text-slate-600 font-medium">${prodi}</td>
+                    <td class="py-4 px-4 text-slate-600 font-medium font-mono text-xs">${earScore} ${earText}</td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
+    }
 
-        dataHariIni.forEach(row => {
-            const dateObj = new Date(row.created_at);
-            const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
-            
-            const nama = row.profil_pengguna?.nama_lengkap || 'Unknown User';
-            const nim = row.profil_pengguna?.nim || 'N/A';
-            const prodi = row.profil_pengguna?.prodi || '-';
-            const isSayu = row.status_mata.toLowerCase() === 'lelah';
-            
-            // EAR kita ambil dari kolom eye_closure (sesuai trik sebelumnya)
-            const earScore = row.eye_closure || 0; 
-            const earText = isSayu ? `<span class="text-[10px] text-red-400">(Low)</span>` : `<span class="text-[10px] text-emerald-400">(Normal)</span>`;
-            const statusBadge = isSayu 
-                ? `<span class="px-3 py-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded-md tracking-widest uppercase">Mata Sayu</span>`
-                : `<span class="px-3 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold rounded-md tracking-widest uppercase">Mata Segar</span>`;
+    const downloadBlob = (blob, filename) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
 
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-50 transition cursor-pointer group';
-            tr.innerHTML = `
-                <td class="py-4 px-4 text-slate-500 font-medium">Hari Ini<br><span class="text-[10px] font-bold text-slate-400">${timeStr}</span></td>
-                <td class="py-4 px-4"><p class="font-bold text-slate-800">${nama}</p><p class="text-[10px] text-slate-500 font-mono">${nim}</p></td>
-                <td class="py-4 px-4 text-slate-600 font-medium">${prodi}</td>
-                <td class="py-4 px-4 text-slate-600 font-medium font-mono text-xs">${earScore} ${earText}</td>
-                <td class="py-4 px-4">${statusBadge}</td>
-            `;
-            tbody.appendChild(tr);
+    const btnLogout = document.getElementById('btn-logout-admin');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            try {
+                await supabase.auth.signOut();
+            } catch (error) {
+                console.warn('Logout gagal, tetap melanjutkan.', error);
+            }
+            window.location.replace('../../login.html');
+        });
+    }
+
+    const btnCsv = document.getElementById('btn-download-analytics-csv');
+    const btnXlsx = document.getElementById('btn-download-analytics-xlsx');
+
+    if (btnCsv) {
+        btnCsv.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/analytics/export/detections?format=csv&period=today', { credentials: 'include' });
+                if (!res.ok) throw new Error('Gagal mengunduh data analitik (CSV)');
+                const blob = await res.blob();
+                downloadBlob(blob, 'analytics_today.csv');
+            } catch (err) {
+                alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+            }
+        });
+    }
+
+    if (btnXlsx) {
+        btnXlsx.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/analytics/export/detections?format=xlsx&period=today', { credentials: 'include' });
+                if (!res.ok) throw new Error('Gagal mengunduh data analitik (XLSX)');
+                const blob = await res.blob();
+                downloadBlob(blob, 'analytics_today.xlsx');
+            } catch (err) {
+                alert(err.message || 'Terjadi kesalahan saat mengunduh.');
+            }
         });
     }
 });

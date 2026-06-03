@@ -178,11 +178,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // Tombol Tambah User Placeholder
+    // Tombol Tambah User: arahkan ke halaman register admin
     const btnTambah = document.getElementById('btn-tambah-user');
     if (btnTambah) {
         btnTambah.addEventListener('click', () => {
-            alert("Fitur ini biasanya dihubungkan dengan Admin API Supabase (auth.admin.createUser) yang harus dijalankan di sisi Server/Backend demi keamanan, atau arahkan Admin untuk menggunakan halaman Register.");
+            const confirmRedirect = confirm('Tambah pengguna akan diarahkan ke halaman Register. Lanjutkan?');
+            if (confirmRedirect) {
+                window.location.href = '../../register.html';
+            }
+        });
+    }
+
+    // Tombol Logout Admin (sama dengan halaman pengaturan akun)
+    const btnLogoutAdmin = document.getElementById('btn-logout-admin');
+    if (btnLogoutAdmin) {
+        btnLogoutAdmin.addEventListener('click', async function() {
+            const shouldLogout = confirm('Yakin ingin keluar dari Dashboard Admin?');
+            if (!shouldLogout) return;
+
+            try {
+                await supabase.auth.signOut();
+            } catch (err) {
+                console.error('Gagal logout:', err);
+            }
+            window.location.replace('../../login.html');
         });
     }
 
