@@ -23,12 +23,18 @@ try:
     from supabase import create_client, Client
     
     SUPABASE_URL = os.getenv('SUPABASE_URL')
-    # Prefer a server-side service role key for backend operations; fall back to SUPABASE_KEY if not provided
-    SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('SUPABASE_KEY')
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+    SUPABASE_ANON_KEY = os.getenv('SUPABASE_KEY')
     
     if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-        logger.info("[OK] Supabase client initialized")
+        logger.info("[OK] Supabase client initialized with service role key")
+        logger.info(f"[DEBUG] SERVICE_ROLE_KEY is set: {bool(SUPABASE_SERVICE_ROLE_KEY)}")
+        logger.info(f"[DEBUG] SERVICE_ROLE_KEY length: {len(SUPABASE_SERVICE_ROLE_KEY) if SUPABASE_SERVICE_ROLE_KEY else 0}")
+    elif SUPABASE_URL and SUPABASE_ANON_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        logger.warning("[WARNING] Supabase initialized with anon key. Table inserts may fail due to RLS if SUPABASE_SERVICE_ROLE_KEY is not configured.")
+        logger.info(f"[DEBUG] SERVICE_ROLE_KEY is NOT set - using ANON_KEY instead")
     else:
         logger.error("[ERROR] Missing SUPABASE_URL or SUPABASE_KEY in .env")
         supabase = None
@@ -47,8 +53,10 @@ def register():
     Expected JSON: {
         "email": "user@example.com",
         "password": "password",
-        "name": "User Name"
+        "name": "User Name",
+        "nim": "1234567890"
     }
+    Note: usia, angkatan, jenis_kelamin, prodi are optional and can be filled in profile settings
     """
     try:
         if not supabase:
@@ -56,17 +64,43 @@ def register():
         
         data = request.get_json()
         
-        # Validate input
-        if not data or not all(k in data for k in ['email', 'password', 'name']):
+        # Validate input - only email, password, name, nim are required
+        required_fields = ['email', 'password', 'name', 'nim']
+        if not data or not all(k in data for k in required_fields):
             return jsonify({'error': 'Missing required fields'}), 400
         
         email = data['email'].lower().strip()
         password = data['password']
         name = data['name'].strip()
+        nim = data['nim'].strip()
+        
+        # Optional fields - will be filled in profile settings
+        gender = data.get('jenis_kelamin', '').strip() if data.get('jenis_kelamin') else None
+        prodi = data.get('prodi', '').strip() if data.get('prodi') else None
+        usia_raw = data.get('usia')
+        angkatan_raw = data.get('angkatan')
+        
+        usia = None
+        angkatan = None
+        
+        if usia_raw:
+            try:
+                usia = int(usia_raw)
+            except (TypeError, ValueError):
+                return jsonify({'error': 'Usia harus angka yang valid'}), 400
+
+        if angkatan_raw:
+            try:
+                angkatan = int(angkatan_raw)
+            except (TypeError, ValueError):
+                return jsonify({'error': 'Angkatan harus angka yang valid'}), 400
         
         # Validate email
         if '@' not in email:
             return jsonify({'error': 'Invalid email format'}), 400
+        
+        if not nim:
+            return jsonify({'error': 'NIM tidak boleh kosong'}), 400
         
         # Validate password
         if len(password) < 6:
@@ -79,24 +113,45 @@ def register():
                 'password': password
             })
             
-            user_id = auth_response.user.id
+            if getattr(auth_response, 'error', None):
+                logger.error(f"Supabase auth sign up error: {auth_response.error}")
+                return jsonify({'error': 'Registrasi gagal pada Supabase Auth'}), 400
+
+            user_id = auth_response.user.id if getattr(auth_response, 'user', None) else None
+            if not user_id:
+                logger.error("Supabase sign_up returned no user id")
+                return jsonify({'error': 'Registrasi gagal: tidak mendapatkan user id'}), 500
             
             # Insert profile data into profil_pengguna table
             profile_data = {
                 'id': user_id,
                 'nama_lengkap': name,
-                'email': email,
-                'role': 'mahasiswa',
+                'nim': nim,
                 'status_akun': 'aktif',
-                'created_at': datetime.now().isoformat()
+                'role': 'mahasiswa'
             }
             
-            # Try to insert profile, but don't fail if table doesn't exist
+            # Add optional fields if provided
+            if gender:
+                profile_data['jenis_kelamin'] = gender
+            if prodi:
+                profile_data['prodi'] = prodi
+            if usia:
+                profile_data['usia'] = usia
+            if angkatan:
+                profile_data['angkatan'] = angkatan
+            
             try:
-                supabase.table('profil_pengguna').insert([profile_data]).execute()
+                profile_result = supabase.table('profil_pengguna').insert([profile_data]).execute()
+                profile_error = getattr(profile_result, 'error', None)
+                if profile_error:
+                    logger.error(f"Could not insert profile: {profile_error}")
+                    if 'permission denied' in str(profile_error).lower() or 'not authorized' in str(profile_error).lower():
+                        return jsonify({'error': 'Registrasi gagal: tidak memiliki izin untuk menulis ke profil_pengguna. Pastikan SUPABASE_SERVICE_ROLE_KEY digunakan di backend.'}), 500
+                    return jsonify({'error': 'Registrasi gagal saat menyimpan data profil. Pastikan tabel profil_pengguna tersedia dan sesuai schema.'}), 500
             except Exception as profile_err:
-                logger.warning(f"Could not insert profile: {str(profile_err)}")
-                # Continue anyway - auth was successful
+                logger.exception(f"Could not insert profile: {str(profile_err)}")
+                return jsonify({'error': 'Registrasi gagal saat menyimpan data profil.'}), 500
             
             logger.info(f"[OK] User registered: {email}")
             
@@ -158,8 +213,24 @@ def login():
                 profile_response = supabase.table('profil_pengguna').select('*').eq('id', user_id).execute()
                 profile = profile_response.data[0] if profile_response.data else None
                 
-                user_name = profile.get('nama_lengkap', 'Pengguna') if profile else 'Pengguna'
-                user_role = profile.get('role', 'mahasiswa') if profile else 'mahasiswa'
+                if profile:
+                    user_name = profile.get('nama_lengkap', 'Pengguna')
+                    user_role = profile.get('role', 'mahasiswa')
+                else:
+                    user_name = user_email
+                    user_role = 'mahasiswa'
+
+                    # Create a minimal profile row if it is missing so later profile fetches work.
+                    try:
+                        insert_result = supabase.table('profil_pengguna').insert([{
+                            'id': user_id,
+                            'nama_lengkap': user_name,
+                            'role': user_role
+                        }]).execute()
+                        if getattr(insert_result, 'error', None):
+                            logger.warning(f"Could not create fallback profile for {user_id}: {insert_result.error}")
+                    except Exception as create_err:
+                        logger.warning(f"Could not create fallback profile for {user_id}: {str(create_err)}")
                 
             except Exception as profile_err:
                 logger.warning(f"Could not fetch profile for {user_id}: {str(profile_err)}")
@@ -326,8 +397,8 @@ def get_profile():
                 'user': {
                     'id': user_id,
                     'email': session.get('user_email', ''),
-                    'name': session.get('user_name', ''),
-                    'role': session.get('user_role', '')
+                    'nama_lengkap': session.get('user_name', 'Pengguna'),
+                    'role': session.get('user_role', 'mahasiswa')
                 }
             }), 200
         
@@ -337,14 +408,23 @@ def get_profile():
             profile = response.data[0] if response.data else None
             
             if not profile:
-                return jsonify({'error': 'User profile not found'}), 404
+                # Profile row missing in `profil_pengguna`; return session values so the user remains logged in.
+                return jsonify({
+                    'success': True,
+                    'user': {
+                        'id': user_id,
+                        'email': session.get('user_email', ''),
+                        'nama_lengkap': session.get('user_name', 'Pengguna'),
+                        'role': session.get('user_role', 'mahasiswa')
+                    }
+                }), 200
             
             return jsonify({
                 'success': True,
                 'user': {
                     'id': user_id,
                     'email': session.get('user_email', ''),
-                    'name': profile.get('nama_lengkap', ''),
+                    'nama_lengkap': profile.get('nama_lengkap', session.get('user_name', 'Pengguna')),
                     'role': profile.get('role', 'mahasiswa')
                 }
             }), 200
@@ -441,6 +521,111 @@ def verify_token():
     except Exception as e:
         logger.exception("[ERROR] Error verifying token")
         return jsonify({'error': 'Server error'}), 500
+
+
+@auth_bp.route('/admin/update-status/<user_id>', methods=['PUT', 'POST'])
+def admin_update_status(user_id):
+    """Admin: Update user account status (aktif/nonaktif)"""
+    try:
+        # Check if user is admin
+        if 'user_role' not in session or session.get('user_role', '').lower() != 'admin':
+            return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        data = request.get_json() or {}
+        new_status = data.get('status_akun', '').lower()
+
+        # Validate status
+        if new_status not in ['aktif', 'nonaktif']:
+            return jsonify({'error': 'Status harus "aktif" atau "nonaktif"'}), 400
+
+        # Update user status in profil_pengguna
+        try:
+            update_result = supabase.table('profil_pengguna').update({'status_akun': new_status}).eq('id', user_id).execute()
+            if getattr(update_result, 'error', None):
+                logger.warning(f"[WARNING] Status update error for {user_id}: {update_result.error}")
+                return jsonify({'error': f'Gagal mengubah status: {str(update_result.error)}'}), 500
+        except Exception as update_err:
+            logger.exception(f"[ERROR] Could not update status for {user_id}")
+            return jsonify({'error': 'Gagal mengubah status pengguna'}), 500
+
+        logger.info(f"[OK] Admin {session.get('user_name')} changed status of {user_id} to {new_status}")
+        return jsonify({
+            'success': True,
+            'message': f'Status pengguna berhasil diubah menjadi {new_status.upper()}',
+            'status': new_status
+        }), 200
+
+    except Exception as e:
+        logger.exception("[ERROR] Error updating user status")
+        return jsonify({'error': 'Server error saat mengubah status'}), 500
+
+
+@auth_bp.route('/admin/delete-user/<user_id>', methods=['DELETE', 'POST'])
+def admin_delete_user(user_id):
+    """Admin: Permanently delete user account and all related data"""
+    try:
+        # Check if user is admin
+        if 'user_role' not in session or session.get('user_role', '').lower() != 'admin':
+            return jsonify({'error': 'Unauthorized. Admin access required.'}), 403
+
+        if not supabase:
+            return jsonify({'error': 'Database service unavailable'}), 503
+
+        # Prevent admin from deleting themselves
+        if user_id == session.get('user_id'):
+            return jsonify({'error': 'Tidak dapat menghapus akun admin sendiri'}), 400
+
+        try:
+            logger.info(f"[DEBUG] Starting delete process for user {user_id}")
+            
+            # First, delete all related data (deteksi_mata and log_aktivitas)
+            # Delete deteksi_mata records
+            logger.info(f"[DEBUG] Deleting deteksi_mata records for {user_id}")
+            deteksi_delete = supabase.table('deteksi_mata').delete().eq('user_id', user_id).execute()
+            logger.info(f"[DEBUG] Deteksi delete result: {deteksi_delete}")
+            if getattr(deteksi_delete, 'error', None):
+                logger.warning(f"[WARNING] Could not delete deteksi_mata for {user_id}: {deteksi_delete.error}")
+
+            # Delete log_aktivitas records
+            logger.info(f"[DEBUG] Deleting log_aktivitas records for {user_id}")
+            logs_delete = supabase.table('log_aktivitas').delete().eq('user_id', user_id).execute()
+            logger.info(f"[DEBUG] Logs delete result: {logs_delete}")
+            if getattr(logs_delete, 'error', None):
+                logger.warning(f"[WARNING] Could not delete log_aktivitas for {user_id}: {logs_delete.error}")
+
+            # Finally, delete the user profile
+            logger.info(f"[DEBUG] Deleting profil_pengguna record for {user_id}")
+            profile_delete = supabase.table('profil_pengguna').delete().eq('id', user_id).execute()
+            logger.info(f"[DEBUG] Profile delete result: {profile_delete}")
+            if getattr(profile_delete, 'error', None):
+                logger.warning(f"[WARNING] Profile delete error for {user_id}: {profile_delete.error}")
+                logger.error(f"[ERROR] Detailed error: {profile_delete}")
+                return jsonify({'error': f'Gagal menghapus profil: {str(profile_delete.error)}'}), 500
+
+            # Try to delete user from Supabase Auth (optional - may fail if not using admin API)
+            try:
+                supabase.auth.admin.delete_user(user_id)
+                logger.info(f"[OK] User {user_id} deleted from Supabase Auth")
+            except Exception as auth_err:
+                logger.warning(f"[WARNING] Could not delete user {user_id} from Supabase Auth: {str(auth_err)}")
+                # Continue anyway - profile is already deleted from database
+
+        except Exception as delete_err:
+            logger.exception(f"[ERROR] Could not delete user {user_id}")
+            return jsonify({'error': 'Gagal menghapus pengguna. Pastikan Anda memiliki akses admin.'}), 500
+
+        logger.info(f"[OK] Admin {session.get('user_name')} deleted user {user_id} permanently")
+        return jsonify({
+            'success': True,
+            'message': 'Akun pengguna berhasil dihapus secara permanen beserta semua data terkait'
+        }), 200
+
+    except Exception as e:
+        logger.exception("[ERROR] Error deleting user")
+        return jsonify({'error': 'Server error saat menghapus pengguna'}), 500
 
 
 def register_auth_routes(app):

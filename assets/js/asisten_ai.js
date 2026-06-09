@@ -1,7 +1,24 @@
 // IMPORT API KEY DARI FILE RAHASIA
 import { GEMINI_API_KEYS } from './config.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    
+    // ==========================================
+    // 0. FETCH USER INFO DARI SESSION
+    // ==========================================
+    let currentUserName = 'Pengguna';
+    let currentUserRole = 'mahasiswa';
+    
+    try {
+        const profileRes = await fetch('/api/auth/profile', { credentials: 'include' });
+        if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            currentUserName = profileData.user?.nama_lengkap || profileData.user?.name || 'Pengguna';
+            currentUserRole = profileData.user?.role || 'mahasiswa';
+        }
+    } catch (e) {
+        console.warn('Tidak bisa fetch user profile:', e);
+    }
     
     // ==========================================
     // 1. KONFIGURASI API & INSTRUKSI SISTEM KETAT
@@ -35,17 +52,27 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 4. Jangan menambahkan informasi tidak relevan atau pengantar panjang; fokus pada rekomendasi singkat dan mudah diikuti.
 5. Gunakan bahasa Indonesia yang profesional, empatik, dan sesuai untuk mahasiswa.
 6. Jawab maksimal dalam 2 paragraf pendek.
-7. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.`;
+7. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.
+8. Panggil pengguna dengan nama mereka jika relevan untuk memberikan respons yang personal dan empati.`;
 
     const eyeKeywords = [
         "mata","perih","lelah","kelelahan","kabur","silau","pusing","layar","laptop","monitor","handphone",
         "smartphone","tablet","membaca","buku","perpustakaan","kerja","tugas","belajar","ergonomi",
         "istirahat","kelopak","kering","pandangan","komputer","visi","nyeri","digital eye strain",
-        "postur","kacamata","fokus","skripsi","makalah","fatigue"
+        "postur","kacamata","fokus","skripsi","makalah","fatigue","panda","bengkak","merah","iritasi",
+        "sensasi","keluhan","gejala","kesehatan","medis","dokter","konsultasi","terapi","treatment"
     ];
 
     function getStaticAnswer(normalizedPrompt) {
         const promptLower = normalizedPrompt.toLowerCase();
+
+        if (/\b(panda|lingkaran|hitam|dark circle|mata panda)\b/.test(promptLower)) {
+            return "Lingkaran hitam atau mata panda biasanya disebabkan oleh kurang tidur, dehidrasi, atau alergi. Untuk menguranginya, pastikan tidur cukup 7-9 jam, minum air teratur, hindari alergen, dan kompres area mata dengan air dingin selama 5-10 menit setiap pagi. Jika berlanjut, konsultasikan dengan dokter.";
+        }
+
+        if (/\b(bengkak|pembengkakan|swelling|puffiness|bengkak mata)\b/.test(promptLower)) {
+            return "Pembengkakan mata dapat disebabkan oleh kurang tidur, alergi, infeksi, atau retensi cairan. Coba kompres dingin atau teh hijau dingin di area mata selama 10-15 menit, tidur dengan bantal lebih tinggi, dan hindari makanan asin berlebihan. Jika bengkak tidak hilang dalam 3-5 hari atau ada rasa nyeri, segera periksa ke dokter mata.";
+        }
 
         if (/\b(membaca|buku|perpustakaan|belajar|tugas|skripsi|makalah|catatan)\b/.test(promptLower)) {
             return "Saat membaca atau belajar lama, jaga jarak buku atau layar minimal 40-50 cm dari mata dan lakukan istirahat singkat setiap 20 menit. Coba aturan 20-20-20: setiap 20 menit, lihat objek sejauh 6 meter selama 20 detik untuk meredakan ketegangan mata.";
@@ -92,17 +119,19 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
         labelHtml: '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-[10px] font-black text-sky-600 uppercase tracking-widest">Dr. Visage</span>'
     };
     
-    const styleUser = {
+    const getStyleUser = () => ({
         box: 'bg-sky-500 border-sky-400 rounded-3xl lg:rounded-tr-none shadow-[0_15px_40px_rgba(14,165,233,0.3)] text-white',
         tail: 'bg-sky-500 border-sky-400 rotate-45 -bottom-2.5 left-1/2 -translate-x-1/2 lg:rotate-45 lg:-right-3 lg:top-1/2 lg:-translate-y-1/2 lg:left-auto lg:translate-x-0',
-        labelHtml: '<span class="text-[10px] font-black text-sky-200 uppercase tracking-widest">Wisnu (Anda)</span>'
-    };
+        labelHtml: `<span class="text-[10px] font-black text-sky-200 uppercase tracking-widest">${currentUserName} (Anda)</span>`
+    });
 
     // ==========================================
     // 4. FUNGSI UPDATE UI BUBBLE
     // ==========================================
     function updateBubble(sender, text, isTyping = false) {
         if (!bubbleContainer) return;
+
+        const styleUser = getStyleUser();
 
         bubbleContainer.classList.remove('bubble-visible');
         bubbleContainer.classList.add('bubble-hidden');
@@ -138,10 +167,11 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 
         const isRelated = eyeKeywords.some(keyword => normalizedPrompt.toLowerCase().includes(keyword));
         if (!isRelated) {
-            return "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual.";
+            return `Maaf ${currentUserName}, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual.`;
         }
 
-        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nPertanyaan Pengguna: ${normalizedPrompt}\n\nJawaban:`;
+        // Include user context di dalam prompt
+        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nKonteks Pengguna: Nama pengguna adalah ${currentUserName}, seorang ${currentUserRole}.\n\nPertanyaan dari ${currentUserName}: ${normalizedPrompt}\n\nJawaban Dr. Visage:`;
 
         if (!Array.isArray(GEMINI_API_KEYS) || GEMINI_API_KEYS.length === 0) {
             return getStaticAnswer(normalizedPrompt);

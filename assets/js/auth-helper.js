@@ -230,6 +230,71 @@ export async function updateProfilPengguna(userId, updates) {
     return { data, error };
 }
 
+/**
+ * Check if user profile is complete (has usia and angkatan)
+ * Returns {isComplete: boolean, missingFields: array}
+ */
+export async function checkProfileCompletion(userId = null) {
+    try {
+        // Get user ID if not provided
+        let targetUserId = userId;
+        if (!targetUserId) {
+            const user = await getCurrentUserProfile();
+            if (!user) {
+                return { isComplete: false, missingFields: ['Belum login'], user: null };
+            }
+            targetUserId = user.id;
+        }
+
+        // Get profile data
+        const { data: profile, error } = await supabase
+            .from('profil_pengguna')
+            .select('*')
+            .eq('id', targetUserId)
+            .single();
+
+        if (error) {
+            console.error('Error checking profile:', error);
+            return { isComplete: false, missingFields: ['Error loading profile'], user: null };
+        }
+
+        if (!profile) {
+            return { isComplete: false, missingFields: ['Profile not found'], user: null };
+        }
+
+        // Check required fields: usia and angkatan
+        const missingFields = [];
+        if (!profile.usia || profile.usia === null) {
+            missingFields.push('Usia');
+        }
+        if (!profile.angkatan || profile.angkatan === null) {
+            missingFields.push('Angkatan');
+        }
+
+        return {
+            isComplete: missingFields.length === 0,
+            missingFields: missingFields,
+            user: profile
+        };
+    } catch (err) {
+        console.error('Profile completion check error:', err);
+        return { isComplete: false, missingFields: ['Error checking profile'], user: null };
+    }
+}
+
+/**
+ * Redirect to profile completion if not complete
+ */
+export async function redirectIfProfileIncomplete() {
+    const result = await checkProfileCompletion();
+    if (!result.isComplete) {
+        alert(`⚠️ Profil Anda belum lengkap!\n\nBidang yang harus dilengkapi: ${result.missingFields.join(', ')}\n\nSilakan lengkapi profil Anda terlebih dahulu untuk mengakses sistem deteksi.`);
+        window.location.href = '/user/form_pengguna.html';
+        return false;
+    }
+    return true;
+}
+
 // ===== DETEKSI MATA FUNCTIONS =====
 
 /**

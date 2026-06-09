@@ -215,6 +215,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newNim = document.getElementById('edit-nim').value.trim();
             const newProdi = document.getElementById('edit-prodi').value;
             const newJk = document.getElementById('edit-jk').value;
+            const newUsia = document.getElementById('edit-usia')?.value;
+            const newAngkatan = document.getElementById('edit-angkatan')?.value;
             
             const newPassword = document.getElementById('edit-new-password')?.value;
             const confirmPassword = document.getElementById('edit-confirm-password')?.value;
@@ -226,6 +228,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     prodi: newProdi,
                     jenis_kelamin: newJk
                 };
+
+                // Add usia and angkatan if provided
+                if (newUsia) body.usia = parseInt(newUsia, 10);
+                if (newAngkatan) body.angkatan = parseInt(newAngkatan, 10);
 
                 if (newPassword) {
                     if (newPassword !== confirmPassword) throw new Error("Konfirmasi sandi baru tidak cocok!");

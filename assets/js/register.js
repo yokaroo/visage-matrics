@@ -13,12 +13,13 @@ document.addEventListener("DOMContentLoaded", function() {
             errorMsg.classList.add('hidden');
 
             const namaLengkap = document.getElementById('inputNama').value.trim();
+            const nim = document.getElementById('inputNim').value.trim();
             const email = document.getElementById('inputEmail').value.trim();
             const passValue = inputPassword.value;
             const repassValue = inputRepassword.value;
 
             // Validasi
-            if (!namaLengkap || !email || !passValue || !repassValue) {
+            if (!namaLengkap || !nim || !email || !passValue || !repassValue) {
                 showError('Semua field harus diisi!');
                 return;
             }
@@ -54,11 +55,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     body: JSON.stringify({
                         email: email,
                         password: passValue,
-                        name: namaLengkap
+                        name: namaLengkap,
+                        nim: nim
                     })
                 });
 
                 const payload = await response.json();
+                console.log('Register response:', response.status, payload);
 
                 if (!response.ok) {
                     throw new Error(payload.error || 'Registrasi gagal. Silakan coba lagi.');

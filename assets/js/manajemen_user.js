@@ -137,15 +137,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const konfirmasi = confirm(`Ubah status akun ini menjadi ${newStatus.toUpperCase()}?`);
                 if(konfirmasi) {
-                    const { error } = await supabase
-                        .from('profil_pengguna')
-                        .update({ status_akun: newStatus })
-                        .eq('id', userId);
+                    try {
+                        const response = await fetch(`/api/auth/admin/update-status/${userId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                status_akun: newStatus
+                            })
+                        });
 
-                    if(error) {
-                        alert("Gagal merubah status: " + error.message);
-                    } else {
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Gagal mengubah status');
+                        }
+
+                        alert(`✅ Status berhasil diubah menjadi ${newStatus.toUpperCase()}`);
                         fetchUsersData(); // Refresh tabel
+                    } catch (err) {
+                        alert(`❌ Gagal mengubah status: ${err.message}`);
+                        console.error('Update status error:', err);
                     }
                 }
             });
@@ -158,20 +172,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const userId = this.getAttribute('data-id');
                 const namaUser = this.getAttribute('data-nama');
 
-                const konfirmasi = confirm(`TINDAKAN KRITIS!\nApakah Anda yakin ingin menghapus profil "${namaUser}"?\n\nPerhatian: Menghapus profil ini akan otomatis menghapus seluruh riwayat deteksi mata milik pengguna ini juga (Cascade Delete).`);
+                const konfirmasi = confirm(`TINDAKAN KRITIS!\nApakah Anda yakin ingin menghapus profil "${namaUser}"?\n\nPerhatian: Menghapus profil ini akan otomatis menghapus seluruh riwayat deteksi mata milik pengguna ini juga (PERMANENT DELETE).`);
                 
                 if(konfirmasi) {
-                    // Karena RLS, pastikan Admin punya hak menghapus di Supabase Policy Anda.
-                    const { error } = await supabase
-                        .from('profil_pengguna')
-                        .delete()
-                        .eq('id', userId);
+                    // Konfirmasi kedua untuk keamanan
+                    const doubleConfirm = confirm(`⚠️ PERHATIAN!\n\nAnda akan menghapus akun "${namaUser}" secara PERMANEN.\nTindakan ini TIDAK DAPAT DIBATALKAN!\n\nTekan OK jika Anda yakin.`);
+                    
+                    if(!doubleConfirm) return;
 
-                    if(error) {
-                        alert("Gagal menghapus data. Pastikan RLS Policy Supabase Anda mengizinkan Admin melakukan Delete.\nError: " + error.message);
-                    } else {
-                        alert(`Data ${namaUser} berhasil dihapus.`);
+                    try {
+                        const response = await fetch(`/api/auth/admin/delete-user/${userId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Gagal menghapus pengguna');
+                        }
+
+                        alert(`✅ Akun "${namaUser}" dan semua data terkaitnya berhasil dihapus secara permanen.`);
                         fetchUsersData(); // Refresh tabel
+                    } catch (err) {
+                        alert(`❌ Gagal menghapus akun: ${err.message}\n\nPastikan Anda memiliki akses admin dan backend sudah dikonfigurasi dengan benar.`);
+                        console.error('Delete user error:', err);
                     }
                 }
             });

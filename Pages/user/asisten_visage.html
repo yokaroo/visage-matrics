@@ -8,6 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Profile Completion Check -->
+    <script type="module">
+        import { redirectIfProfileIncomplete } from '../../assets/js/auth-helper.js';
+        
+        // Check profile completion before page fully loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            await redirectIfProfileIncomplete();
+        });
+    </script>
+    
     <script>
         tailwind.config = {
             theme: { 
