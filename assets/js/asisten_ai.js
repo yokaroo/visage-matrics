@@ -191,7 +191,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             ],
             generationConfig: {
                 temperature: 0.4, 
-                maxOutputTokens: 8.192, // Ditingkatkan agar jawaban medis tidak gampang terpotong
+                maxOutputTokens: 1024, // Ditingkatkan agar jawaban medis tidak gampang terpotong
                 topP: 0.8
             }
         };
