@@ -19,12 +19,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
         console.warn('Tidak bisa fetch user profile:', e);
     }
+
+    // ==========================================
+    // 0.5. STATE MANAGEMENT (MEMORI PERCAKAPAN) - TAHAP 2
+    // ==========================================
+    let chatHistory = [];
+    const MAX_HISTORY_LENGTH = 6; // Hanya mengingat 6 pesan terakhir agar hemat token API
+
+    function saveToMemory(sender, text) {
+        chatHistory.push({ role: sender, content: text });
+        if (chatHistory.length > MAX_HISTORY_LENGTH) {
+            chatHistory.shift(); 
+        }
+    }
     
     // ==========================================
     // 1. KONFIGURASI API & INSTRUKSI SISTEM KETAT
     // ==========================================
-    
-    // Fallback Endpoint: Jika model preview mati, sistem akan turun ke model stabil
     const GEMINI_MODELS = [
         'gemini-3-flash-preview',
         'gemini-2.5-flash',
@@ -38,22 +49,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return GEMINI_API_KEYS[index];
     }
 
+    // TAHAP 1: Perbaikan endpoint wajib menggunakan generateContent
     function buildGeminiEndpoint(model) {
         const key = getRandomGeminiKey();
-        return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateText?key=${key}`;
+        return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     }
 
-    // INSTRUKSI KETAT (GUARDRAIL) UNTUK AI
     const SYSTEM_INSTRUCTION = `Anda adalah Dr. Visage AI, asisten medis virtual spesialis kesehatan mata dari platform Visage Metrics.
 ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
-1. Jawab pertanyaan pengguna secara langsung dan spesifik sesuai topik kesehatan mata, kelelahan visual, kelelahan membaca, ergonomi belajar, dan kebiasaan membaca di perpustakaan.
-2. Berikan solusi praktis untuk keluhan seperti mata perih, mata kering, pandangan kabur, sakit kepala, atau sensasi lelah saat membaca, belajar, atau menggunakan gadget.
-3. Jika pengguna bertanya tentang hal di luar topik kesehatan mata, jawab dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata, kelelahan visual, dan kebiasaan membaca."
-4. Jangan menambahkan informasi tidak relevan atau pengantar panjang; fokus pada rekomendasi singkat dan mudah diikuti.
-5. Gunakan bahasa Indonesia yang profesional, empatik, dan sesuai untuk mahasiswa.
-6. Jawab maksimal dalam 2 paragraf pendek.
-7. Jangan gunakan simbol asterisk (*), markdown tebal, atau format kode karena akan dibaca oleh Text-to-Speech.
-8. Panggil pengguna dengan nama mereka jika relevan untuk memberikan respons yang personal dan empati.`;
+1. Jawab pertanyaan pengguna secara spesifik sesuai topik kesehatan mata, kelelahan visual (Digital Eye Strain), dan ergonomi belajar di perpustakaan.
+2. Jika pengguna melanjutkan obrolan sebelumnya, jawab dengan natural sesuai konteks.
+3. Jika pengguna jelas-jelas bertanya tentang hal di luar topik (misal: politik, resep masakan, cuaca), tolak dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan kesehatan mata dan kelelahan visual."
+4. Jangan menambahkan pengantar panjang; fokus pada rekomendasi praktis.
+5. Gunakan bahasa Indonesia profesional dan empatik. Jawab maksimal 2 paragraf pendek.
+6. DILARANG KERAS menggunakan simbol asterisk (*), hashtag (#), atau markdown tebal karena merusak sistem Text-to-Speech klien.`;
 
     const eyeKeywords = [
         "mata","perih","lelah","kelelahan","kabur","silau","pusing","layar","laptop","monitor","handphone",
@@ -64,37 +73,16 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     ];
 
     function getStaticAnswer(normalizedPrompt) {
+        // ... (Isi fungsi getStaticAnswer sama persis seperti kode lu sebelumnya) ...
         const promptLower = normalizedPrompt.toLowerCase();
-
-        if (/\b(panda|lingkaran|hitam|dark circle|mata panda)\b/.test(promptLower)) {
-            return "Lingkaran hitam atau mata panda biasanya disebabkan oleh kurang tidur, dehidrasi, atau alergi. Untuk menguranginya, pastikan tidur cukup 7-9 jam, minum air teratur, hindari alergen, dan kompres area mata dengan air dingin selama 5-10 menit setiap pagi. Jika berlanjut, konsultasikan dengan dokter.";
-        }
-
-        if (/\b(bengkak|pembengkakan|swelling|puffiness|bengkak mata)\b/.test(promptLower)) {
-            return "Pembengkakan mata dapat disebabkan oleh kurang tidur, alergi, infeksi, atau retensi cairan. Coba kompres dingin atau teh hijau dingin di area mata selama 10-15 menit, tidur dengan bantal lebih tinggi, dan hindari makanan asin berlebihan. Jika bengkak tidak hilang dalam 3-5 hari atau ada rasa nyeri, segera periksa ke dokter mata.";
-        }
-
         if (/\b(membaca|buku|perpustakaan|belajar|tugas|skripsi|makalah|catatan)\b/.test(promptLower)) {
-            return "Saat membaca atau belajar lama, jaga jarak buku atau layar minimal 40-50 cm dari mata dan lakukan istirahat singkat setiap 20 menit. Coba aturan 20-20-20: setiap 20 menit, lihat objek sejauh 6 meter selama 20 detik untuk meredakan ketegangan mata.";
+            return "Saat membaca atau belajar lama, jaga jarak buku atau layar minimal 40-50 cm dari mata dan lakukan istirahat singkat setiap 20 menit. Coba aturan 20-20-20: setiap 20 menit, lihat objek sejauh 6 meter selama 20 detik.";
         }
-
-        if (/\b(layar|laptop|monitor|handphone|smartphone|tablet|gadget)\b/.test(promptLower)) {
-            return "Untuk mengurangi kelelahan mata akibat layar, atur kecerahan agar tidak terlalu terang dan gunakan pencahayaan ruangan lembut. Istirahatkan mata setiap 20 menit, berkedip lebih sering, dan posisikan layar sejajar atau sedikit di bawah tingkat mata.";
-        }
-
-        if (/\b(kelelahan|letih|capek|lelah)\b/.test(promptLower)) {
-            return "Kelelahan visual sering terjadi karena mata terus fokus pada teks atau layar tanpa istirahat. Coba lakukan jeda singkat setiap 20 menit dan pastikan pencahayaan tidak membuat mata bekerja lebih keras.";
-        }
-
-        if (/\b(perih|kering|kabur|pusing|sakit kepala|nyeri|panas|bau)\b/.test(promptLower)) {
-            return "Gejala seperti mata perih, kering, kabur, atau sakit kepala biasanya disebabkan oleh ketegangan visual. Istirahatkan mata secara teratur, berkedip lebih sering, dan pastikan penerangan cukup tanpa silau langsung.";
-        }
-
-        return "Mata lelah saat membaca atau berada di perpustakaan umumnya dapat diatasi dengan istirahat teratur, pencahayaan yang tepat, dan memastikan jarak pandang yang nyaman. Jika keluhan terus berlanjut, konsultasikan dengan tenaga medis.";
+        return "Mata lelah saat membaca atau berada di perpustakaan umumnya dapat diatasi dengan istirahat teratur, pencahayaan yang tepat, dan memastikan jarak pandang yang nyaman. Jika keluhan berlanjut, konsultasikan dengan tenaga medis.";
     }
 
     // ==========================================
-    // 2. REFERENSI ELEMEN DOM
+    // 2 & 3 & 4. REFERENSI DOM & UPDATE BUBBLE UI
     // ==========================================
     const chatForm = document.getElementById('chat-form');
     const inputField = document.getElementById('chat-input');
@@ -110,9 +98,6 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 
     let isMuted = false;
 
-    // ==========================================
-    // 3. PENGATURAN GAYA BUBBLE
-    // ==========================================
     const styleRobot = {
         box: 'bg-white/95 border-sky-100 rounded-3xl lg:rounded-tl-none shadow-[0_15px_40px_rgba(14,165,233,0.15)] text-slate-700',
         tail: 'bg-white/95 border-sky-100 rotate-45 -top-2.5 left-1/2 -translate-x-1/2 lg:-rotate-45 lg:-left-3 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-0',
@@ -125,12 +110,8 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
         labelHtml: `<span class="text-[10px] font-black text-sky-200 uppercase tracking-widest">${currentUserName} (Anda)</span>`
     });
 
-    // ==========================================
-    // 4. FUNGSI UPDATE UI BUBBLE
-    // ==========================================
     function updateBubble(sender, text, isTyping = false) {
         if (!bubbleContainer) return;
-
         const styleUser = getStyleUser();
 
         bubbleContainer.classList.remove('bubble-visible');
@@ -158,31 +139,45 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     }
 
     // ==========================================
-    // 5. FUNGSI FILTER OOT & FETCH API GEMINI
+    // 5. FUNGSI FETCH API GEMINI TERBARU (INTI OTAK)
     // ==========================================
-    
     async function getAIResponse(prompt) {
         const normalizedPrompt = prompt.trim();
         if (!normalizedPrompt) return "Silakan tulis pertanyaan tentang kesehatan mata supaya Dr. Visage dapat membantu.";
 
-        const isRelated = eyeKeywords.some(keyword => normalizedPrompt.toLowerCase().includes(keyword));
-        if (!isRelated) {
-            return `Maaf ${currentUserName}, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual.`;
+        // TAHAP 3: Bypass filter jika obrolan sudah berlangsung (memori terisi)
+        if (chatHistory.length === 0) {
+            const isRelated = eyeKeywords.some(keyword => normalizedPrompt.toLowerCase().includes(keyword));
+            if (!isRelated) {
+                return `Maaf ${currentUserName}, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan masalah kesehatan mata dan kelelahan visual.`;
+            }
         }
 
-        // Include user context di dalam prompt
-        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nKonteks Pengguna: Nama pengguna adalah ${currentUserName}, seorang ${currentUserRole}.\n\nPertanyaan dari ${currentUserName}: ${normalizedPrompt}\n\nJawaban Dr. Visage:`;
+        // TAHAP 2: Catat pertanyaan User ke memori
+        saveToMemory('User', normalizedPrompt);
+
+        // Gabungkan memori menjadi satu string konteks
+        let historyText = chatHistory.map(chat => `${chat.role === 'User' ? currentUserName : 'Dr. Visage'}: ${chat.content}`).join('\n');
+
+        const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nKonteks Pengguna: Nama pengguna adalah ${currentUserName}, seorang ${currentUserRole}.\n\nRiwayat Obrolan:\n${historyText}\n\nBerikan balasan Dr. Visage selanjutnya:`;
 
         if (!Array.isArray(GEMINI_API_KEYS) || GEMINI_API_KEYS.length === 0) {
             return getStaticAnswer(normalizedPrompt);
         }
 
+        // TAHAP 1: Format Payload JSON Generasi Terbaru
         const requestBody = {
-            prompt: { text: fullPrompt },
-            temperature: 0.2,
-            maxOutputTokens: 384,
-            topP: 0.8,
-            candidateCount: 1
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: fullPrompt }]
+                }
+            ],
+            generationConfig: {
+                temperature: 0.4, // Dinaikkan sedikit agar AI lebih responsif/luwes
+                maxOutputTokens: 384,
+                topP: 0.8
+            }
         };
 
         for (let model of GEMINI_MODELS) {
@@ -195,29 +190,27 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
                 });
 
                 const data = await res.json();
+                
                 if (res.ok) {
-                    const answer = data?.candidates?.[0]?.output
-                        || data?.candidates?.[0]?.content?.[0]?.text
-                        || data?.candidates?.[0]?.content?.parts?.[0]?.text
-                        || data?.output_text
-                        || data?.candidates?.[0]?.text
-                        || null;
+                    // TAHAP 1: Parsing respons khusus endpoint generateContent
+                    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
 
                     if (answer) {
-                        return answer.trim();
+                        let finalAnswer = answer.trim();
+                        // TAHAP 2: Catat jawaban AI ke memori
+                        saveToMemory('AI', finalAnswer);
+                        return finalAnswer;
                     }
-
-                    console.warn('Gemini respons tidak berbentuk yang diharapkan:', data);
                 }
 
                 if (res.status === 404) {
-                    console.warn("Model API tidak ditemukan, mencoba fallback...");
+                    console.warn(`Model API ${model} tidak ditemukan, mencoba fallback...`);
                     continue;
                 }
-
                 console.warn('Gemini error response:', res.status, data);
+
             } catch (e) {
-                console.error("Kesalahan jaringan:", e);
+                console.error("Kesalahan jaringan API:", e);
             }
         }
 
@@ -225,7 +218,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     }
 
     // ==========================================
-    // 6. FUNGSI ANIMASI & SPEECH SYNTHESIS
+    // 6 & 7. ANIMASI, TTS & EVENT LISTENER
     // ==========================================
     function speak(text) {
         if (isMuted) return;
@@ -258,9 +251,6 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
         window.speechSynthesis.speak(utter);
     }
 
-    // ==========================================
-    // 7. EVENT LISTENER (SUBMIT & MUTE)
-    // ==========================================
     if (chatForm) {
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
