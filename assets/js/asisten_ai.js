@@ -207,6 +207,12 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 
                 // ANTI CRASH: Baca sebagai teks mentah dulu
                 const rawGeminiText = await res.text(); 
+
+                // === PASANG RADAR DETEKSI DI SINI ===
+                console.log("=== HASIL RONTGEN AI ===");
+                console.log("1. Alasan AI Berhenti:", data?.candidates?.[0]?.finishReason);
+                console.log("2. Teks Mentah dari Server:", data?.candidates?.[0]?.content?.parts?.[0]?.text);
+                console.log("========================");
                 
                 if (!rawGeminiText.trim()) {
                     console.warn(`Respons dari model ${model} kosong.`);
