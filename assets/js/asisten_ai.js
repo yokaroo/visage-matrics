@@ -191,7 +191,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             ],
             generationConfig: {
                 temperature: 0.4, 
-                maxOutputTokens: 512, // Ditingkatkan agar jawaban medis tidak gampang terpotong
+                maxOutputTokens: 8.192, // Ditingkatkan agar jawaban medis tidak gampang terpotong
                 topP: 0.8
             }
         };
@@ -220,7 +220,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
                 console.log("1. Alasan AI Berhenti:", data?.candidates?.[0]?.finishReason);
                 console.log("2. Teks Mentah dari Server:", data?.candidates?.[0]?.content?.parts?.[0]?.text);
                 console.log("========================");
-                
+
                 if (res.ok) {
                     const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
 
