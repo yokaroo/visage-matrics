@@ -4,27 +4,31 @@ import { GEMINI_API_KEYS } from './config.js';
 document.addEventListener('DOMContentLoaded', async () => {
     
     // ==========================================
-    // 0. FETCH USER INFO DARI SESSION
+    // 0. FETCH USER INFO DARI SESSION (ANTI CRASH JSON)
     // ==========================================
     let currentUserName = 'Pengguna';
     let currentUserRole = 'mahasiswa';
     
     try {
         const profileRes = await fetch('/api/auth/profile', { credentials: 'include' });
-        if (profileRes.ok) {
-            const profileData = await profileRes.json();
+        const rawText = await profileRes.text(); // Baca teks mentah dulu untuk mencegah error JSON kosong
+        
+        if (profileRes.ok && rawText.trim() !== "") {
+            const profileData = JSON.parse(rawText);
             currentUserName = profileData.user?.nama_lengkap || profileData.user?.name || 'Pengguna';
             currentUserRole = profileData.user?.role || 'mahasiswa';
+        } else {
+            console.warn('API Profil kosong. Lanjut pakai nama Pengguna default.');
         }
     } catch (e) {
-        console.warn('Tidak bisa fetch user profile:', e);
+        console.warn('Tidak bisa fetch user profile (berjalan di localhost tanpa backend):', e);
     }
 
     // ==========================================
-    // 0.5. STATE MANAGEMENT (MEMORI PERCAKAPAN) - TAHAP 2
+    // 0.5. STATE MANAGEMENT (MEMORI PERCAKAPAN)
     // ==========================================
     let chatHistory = [];
-    const MAX_HISTORY_LENGTH = 6; // Hanya mengingat 6 pesan terakhir agar hemat token API
+    const MAX_HISTORY_LENGTH = 6; 
 
     function saveToMemory(sender, text) {
         chatHistory.push({ role: sender, content: text });
@@ -34,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // ==========================================
-    // 1. KONFIGURASI API & INSTRUKSI SISTEM KETAT
+    // 1. KONFIGURASI API & INSTRUKSI SISTEM
     // ==========================================
     const GEMINI_MODELS = [
         'gemini-3-flash-preview',
@@ -49,7 +53,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return GEMINI_API_KEYS[index];
     }
 
-    // TAHAP 1: Perbaikan endpoint wajib menggunakan generateContent
     function buildGeminiEndpoint(model) {
         const key = getRandomGeminiKey();
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -59,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 1. Jawab pertanyaan pengguna secara spesifik sesuai topik kesehatan mata, kelelahan visual (Digital Eye Strain), dan ergonomi belajar di perpustakaan.
 2. Jika pengguna melanjutkan obrolan sebelumnya, jawab dengan natural sesuai konteks.
-3. Jika pengguna jelas-jelas bertanya tentang hal di luar topik (misal: politik, resep masakan, cuaca), tolak dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan kesehatan mata dan kelelahan visual."
+3. Jika pengguna jelas-jelas bertanya tentang hal di luar topik (misal: resep masakan, cuaca), tolak dengan sopan: "Maaf, sebagai Dr. Visage AI, saya hanya diprogram untuk mendiskusikan kesehatan mata dan kelelahan visual."
 4. Jangan menambahkan pengantar panjang; fokus pada rekomendasi praktis.
 5. Gunakan bahasa Indonesia profesional dan empatik. Jawab maksimal 2 paragraf pendek.
 6. DILARANG KERAS menggunakan simbol asterisk (*), hashtag (#), atau markdown tebal karena merusak sistem Text-to-Speech klien.`;
@@ -73,7 +76,6 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     ];
 
     function getStaticAnswer(normalizedPrompt) {
-        // ... (Isi fungsi getStaticAnswer sama persis seperti kode lu sebelumnya) ...
         const promptLower = normalizedPrompt.toLowerCase();
         if (/\b(membaca|buku|perpustakaan|belajar|tugas|skripsi|makalah|catatan)\b/.test(promptLower)) {
             return "Saat membaca atau belajar lama, jaga jarak buku atau layar minimal 40-50 cm dari mata dan lakukan istirahat singkat setiap 20 menit. Coba aturan 20-20-20: setiap 20 menit, lihat objek sejauh 6 meter selama 20 detik.";
@@ -82,7 +84,7 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
     }
 
     // ==========================================
-    // 2 & 3 & 4. REFERENSI DOM & UPDATE BUBBLE UI
+    // 2. REFERENSI DOM & SANITASI TEKS
     // ==========================================
     const chatForm = document.getElementById('chat-form');
     const inputField = document.getElementById('chat-input');
@@ -98,6 +100,19 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
 
     let isMuted = false;
 
+    // FUNGSI BARU: Sanitasi HTML untuk mencegah teks terpotong oleh simbol matematika (<, >)
+    function formatTextSafe(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;') 
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>'); 
+    }
+
+    // ==========================================
+    // 3 & 4. PENGATURAN GAYA BUBBLE & UPDATE UI
+    // ==========================================
     const styleRobot = {
         box: 'bg-white/95 border-sky-100 rounded-3xl lg:rounded-tl-none shadow-[0_15px_40px_rgba(14,165,233,0.15)] text-slate-700',
         tail: 'bg-white/95 border-sky-100 rotate-45 -top-2.5 left-1/2 -translate-x-1/2 lg:-rotate-45 lg:-left-3 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-0',
@@ -129,7 +144,9 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             } else {
                 bubbleContent.classList.remove('hidden');
                 typingAnim.classList.add('hidden');
-                bubbleContent.innerHTML = text;
+                
+                // PENERAPAN SANITASI TEKS DI SINI
+                bubbleContent.innerHTML = formatTextSafe(text);
                 bubbleContent.scrollTop = 0; 
             }
 
@@ -145,7 +162,6 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
         const normalizedPrompt = prompt.trim();
         if (!normalizedPrompt) return "Silakan tulis pertanyaan tentang kesehatan mata supaya Dr. Visage dapat membantu.";
 
-        // TAHAP 3: Bypass filter jika obrolan sudah berlangsung (memori terisi)
         if (chatHistory.length === 0) {
             const isRelated = eyeKeywords.some(keyword => normalizedPrompt.toLowerCase().includes(keyword));
             if (!isRelated) {
@@ -153,19 +169,16 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
             }
         }
 
-        // TAHAP 2: Catat pertanyaan User ke memori
         saveToMemory('User', normalizedPrompt);
 
-        // Gabungkan memori menjadi satu string konteks
         let historyText = chatHistory.map(chat => `${chat.role === 'User' ? currentUserName : 'Dr. Visage'}: ${chat.content}`).join('\n');
-
         const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nKonteks Pengguna: Nama pengguna adalah ${currentUserName}, seorang ${currentUserRole}.\n\nRiwayat Obrolan:\n${historyText}\n\nBerikan balasan Dr. Visage selanjutnya:`;
 
         if (!Array.isArray(GEMINI_API_KEYS) || GEMINI_API_KEYS.length === 0) {
             return getStaticAnswer(normalizedPrompt);
         }
 
-        // TAHAP 1: Format Payload JSON Generasi Terbaru
+        // FUNGSI BARU: Payload JSON lengkap dengan Bypass Sensor Medis Google
         const requestBody = {
             contents: [
                 {
@@ -173,9 +186,12 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
                     parts: [{ text: fullPrompt }]
                 }
             ],
+            safetySettings: [
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+            ],
             generationConfig: {
-                temperature: 0.4, // Dinaikkan sedikit agar AI lebih responsif/luwes
-                maxOutputTokens: 384,
+                temperature: 0.4, 
+                maxOutputTokens: 512, // Ditingkatkan agar jawaban medis tidak gampang terpotong
                 topP: 0.8
             }
         };
@@ -189,15 +205,21 @@ ATURAN KETAT YANG TIDAK BOLEH DILANGGAR:
                     body: JSON.stringify(requestBody)
                 });
 
-                const data = await res.json();
+                // ANTI CRASH: Baca sebagai teks mentah dulu
+                const rawGeminiText = await res.text(); 
+                
+                if (!rawGeminiText.trim()) {
+                    console.warn(`Respons dari model ${model} kosong.`);
+                    continue; 
+                }
+
+                const data = JSON.parse(rawGeminiText); 
                 
                 if (res.ok) {
-                    // TAHAP 1: Parsing respons khusus endpoint generateContent
                     const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
 
                     if (answer) {
                         let finalAnswer = answer.trim();
-                        // TAHAP 2: Catat jawaban AI ke memori
                         saveToMemory('AI', finalAnswer);
                         return finalAnswer;
                     }
