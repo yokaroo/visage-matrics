@@ -133,7 +133,7 @@ export async function isUser() {
  */
 export async function getUserName() {
     const user = await getCurrentUserProfile();
-    return user?.name || 'Pengguna';
+    return user?.nama_lengkap || user?.name || 'Pengguna';
 }
 
 /**

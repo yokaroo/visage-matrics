@@ -106,6 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Refresh data di layar
                 if(sidebarNama) sidebarNama.textContent = namaBaru;
+                if (session?.user?.email) {
+                    localStorage.setItem(`user_name_${session.user.email.toLowerCase()}`, namaBaru);
+                    localStorage.setItem('userName', namaBaru);
+                }
 
                 // Kosongkan form password
                 inputs[2].value = "";

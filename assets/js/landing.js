@@ -79,8 +79,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const userName = currentUser.name || 'Pengguna';
+    let userName = currentUser.nama_lengkap || 'Pengguna';
+    const userEmail = (currentUser.email || '').toLowerCase();
     const userRole = currentUser.role || 'user';
+
+    // If name is still generic or is equal to email, try localStorage fallback.
+    if (!userName || userName === 'Pengguna' || userName === userEmail) {
+        const savedName = localStorage.getItem(`user_name_${userEmail}`) || localStorage.getItem('userName');
+        if (savedName) {
+            userName = savedName;
+            console.log(`[DEBUG] Using saved name from localStorage: ${userName}`);
+        }
+    }
 
     // Periksa role - jika admin, redirect ke admin dashboard
     if (userRole.toLowerCase() === 'admin') {
@@ -267,6 +277,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (elNim) elNim.textContent = "NIM: " + newNim;
                 if (elProdi) elProdi.textContent = newProdi;
                 if (dashNama) dashNama.textContent = newNama;
+
+                if (userEmail) {
+                    localStorage.setItem(`user_name_${userEmail.toLowerCase()}`, newNama);
+                    localStorage.setItem('userName', newNama);
+                }
 
                 profileMsg.textContent = 'Profil & Keamanan berhasil diperbarui!';
                 profileMsg.className = 'text-emerald-500 text-xs font-bold text-center bg-emerald-50 py-2 rounded-lg border border-emerald-100 block mt-4';

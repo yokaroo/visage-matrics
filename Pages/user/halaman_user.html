@@ -552,7 +552,7 @@
                     // Update UI with user name
                     const namElements = document.querySelectorAll('#dash-nama, #sidebar-nama');
                     namElements.forEach(el => {
-                        if (el) el.textContent = user.name || 'Pengguna';
+                        if (el) el.textContent = user.nama_lengkap || user.name || 'Pengguna';
                     });
                 }
             } catch (error) {

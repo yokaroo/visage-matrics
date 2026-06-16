@@ -5,10 +5,19 @@ document.addEventListener("DOMContentLoaded", function() {
     const inputRepassword = document.getElementById('inputRepassword');
     const errorMsg = document.getElementById('errorMsg');
     const btnSubmit = document.getElementById('btnSubmit');
+    
+    // Track registration attempts
+    let registrationInProgress = false;
 
     if (formRegister) {
         formRegister.addEventListener('submit', async function(event) {
             event.preventDefault();
+
+            // Prevent double submission
+            if (registrationInProgress) {
+                showError('Proses registrasi sedang berlangsung. Harap tunggu...');
+                return;
+            }
 
             errorMsg.classList.add('hidden');
 
@@ -44,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const teksAsli = btnSubmit.innerHTML;
             btnSubmit.innerHTML = 'Memproses...';
             btnSubmit.disabled = true;
+            registrationInProgress = true;
 
             try {
                 // Kirim register request ke backend
@@ -64,26 +74,46 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log('Register response:', response.status, payload);
 
                 if (!response.ok) {
-                    throw new Error(payload.error || 'Registrasi gagal. Silakan coba lagi.');
+                    // Handle specific error messages
+                    let errorMessage = payload.error || 'Registrasi gagal. Silakan coba lagi.';
+                    
+                    if (response.status === 409) {
+                        errorMessage = 'Email ini sudah terdaftar. Gunakan email lain atau gunakan fitur Login.';
+                    } else if (response.status === 500) {
+                        errorMessage = 'Terjadi kesalahan server. Silakan hubungi administrator atau coba lagi nanti.';
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
 
-                // Sukses
-                alert(`Registrasi Berhasil!\n\nEmail: ${email}\nSilakan Login menggunakan akun ini.`);
+                // Sukses - Show success message and redirect
+                alert(`Registrasi Berhasil!\n\nEmail: ${email}\nAkun Anda telah terdaftar.\n\nSilakan Login menggunakan akun ini.`);
+                
+                // Save user name to localStorage for later use if profile database insert failed
+                localStorage.setItem(`user_name_${email.toLowerCase()}`, namaLengkap);
+                
+                // Clear form
+                formRegister.reset();
+                
+                // Redirect to login after a short delay
                 setTimeout(() => {
                     window.location.href = '/login.html';
                 }, 500);
 
             } catch (err) {
                 showError(err.message || 'Terjadi kesalahan saat registrasi.');
+                console.error('[REGISTER ERROR]', err.message);
             } finally {
                 btnSubmit.innerHTML = teksAsli;
                 btnSubmit.disabled = false;
+                registrationInProgress = false;
             }
 
             function showError(msg) {
                 errorMsg.innerText = msg;
                 errorMsg.classList.remove('hidden');
-                console.error('[REGISTER ERROR]', msg);
+                // Auto-scroll to error message
+                errorMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
     }

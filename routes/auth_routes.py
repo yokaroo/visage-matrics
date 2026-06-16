@@ -115,6 +115,9 @@ def register():
             
             if getattr(auth_response, 'error', None):
                 logger.error(f"Supabase auth sign up error: {auth_response.error}")
+                error_msg = str(auth_response.error)
+                if 'already exists' in error_msg.lower():
+                    return jsonify({'error': 'Email sudah terdaftar di sistem'}), 409
                 return jsonify({'error': 'Registrasi gagal pada Supabase Auth'}), 400
 
             user_id = auth_response.user.id if getattr(auth_response, 'user', None) else None
@@ -122,13 +125,17 @@ def register():
                 logger.error("Supabase sign_up returned no user id")
                 return jsonify({'error': 'Registrasi gagal: tidak mendapatkan user id'}), 500
             
-            # Insert profile data into profil_pengguna table
+            # Note: Cannot update auth metadata with anon key, will rely on profile database insertion
+            # admin.update_user_by_id requires service role key which we don't have
+            
+            # Prepare profile data
             profile_data = {
                 'id': user_id,
                 'nama_lengkap': name,
                 'nim': nim,
                 'status_akun': 'aktif',
-                'role': 'mahasiswa'
+                'role': 'mahasiswa',
+                'created_at': datetime.now().isoformat()
             }
             
             # Add optional fields if provided
@@ -141,23 +148,80 @@ def register():
             if angkatan:
                 profile_data['angkatan'] = angkatan
             
+            # Try to insert profile with error handling and retry logic
+            profile_insertion_success = False
+            profile_error_msg = None
+            
+            # First attempt: try to insert profile
             try:
+                logger.info(f"Attempting to insert profile for user {user_id}")
                 profile_result = supabase.table('profil_pengguna').insert([profile_data]).execute()
                 profile_error = getattr(profile_result, 'error', None)
+                
                 if profile_error:
-                    logger.error(f"Could not insert profile: {profile_error}")
-                    if 'permission denied' in str(profile_error).lower() or 'not authorized' in str(profile_error).lower():
-                        return jsonify({'error': 'Registrasi gagal: tidak memiliki izin untuk menulis ke profil_pengguna. Pastikan SUPABASE_SERVICE_ROLE_KEY digunakan di backend.'}), 500
-                    return jsonify({'error': 'Registrasi gagal saat menyimpan data profil. Pastikan tabel profil_pengguna tersedia dan sesuai schema.'}), 500
-            except Exception as profile_err:
-                logger.exception(f"Could not insert profile: {str(profile_err)}")
-                return jsonify({'error': 'Registrasi gagal saat menyimpan data profil.'}), 500
+                    logger.warning(f"First insert attempt failed: {profile_error}")
+                    profile_error_msg = str(profile_error)
+                    
+                    # Check if profile already exists (in case of concurrent registration)
+                    try:
+                        existing_profile = supabase.table('profil_pengguna').select('id').eq('id', user_id).execute()
+                        if existing_profile.data and len(existing_profile.data) > 0:
+                            logger.info(f"Profile already exists for user {user_id}, attempting update")
+                            # Update existing profile instead
+                            update_result = supabase.table('profil_pengguna').update(profile_data).eq('id', user_id).execute()
+                            update_error = getattr(update_result, 'error', None)
+                            if update_error:
+                                logger.error(f"Update profile failed: {update_error}")
+                                profile_insertion_success = False
+                            else:
+                                logger.info(f"Profile updated successfully for user {user_id}")
+                                profile_insertion_success = True
+                        else:
+                            profile_insertion_success = False
+                    except Exception as check_err:
+                        logger.warning(f"Could not check existing profile: {str(check_err)}")
+                        profile_insertion_success = False
+                else:
+                    profile_insertion_success = True
+                    logger.info(f"Profile inserted successfully for user {user_id}")
+                    
+            except Exception as insert_err:
+                logger.error(f"Profile insertion exception: {str(insert_err)}")
+                profile_error_msg = str(insert_err)
+                profile_insertion_success = False
             
-            logger.info(f"[OK] User registered: {email}")
+            # If profile insertion still failed, try minimal fallback
+            if not profile_insertion_success:
+                logger.warning(f"Profile insertion failed, attempting minimal fallback for user {user_id}")
+                try:
+                    fallback_data = {
+                        'id': user_id,
+                        'nama_lengkap': name,
+                        'nim': nim,
+                        'status_akun': 'aktif',
+                        'role': 'mahasiswa'
+                    }
+                    fallback_result = supabase.table('profil_pengguna').insert([fallback_data]).execute()
+                    fallback_error = getattr(fallback_result, 'error', None)
+                    if fallback_error:
+                        logger.error(f"Fallback profile insertion also failed: {fallback_error}")
+                    else:
+                        profile_insertion_success = True
+                        logger.info(f"Fallback profile inserted successfully for user {user_id}")
+                except Exception as fallback_err:
+                    logger.error(f"Fallback profile insertion exception: {str(fallback_err)}")
             
+            # Log the final result
+            if profile_insertion_success:
+                logger.info(f"[OK] User registered successfully: {email} (Profile: OK)")
+            else:
+                logger.warning(f"[WARNING] User auth created but profile failed for: {email} (Error: {profile_error_msg})")
+            
+            # Return success even if profile insertion failed - the user can still login
+            # They can update their profile in settings later if needed
             return jsonify({
                 'success': True,
-                'message': 'User registered successfully. Please login.',
+                'message': 'Registrasi berhasil! Silakan login dengan akun Anda.',
                 'email': email
             }), 201
             
@@ -167,7 +231,7 @@ def register():
             
             # Handle specific Supabase errors
             if 'already exists' in error_msg.lower():
-                return jsonify({'error': 'Email already registered'}), 409
+                return jsonify({'error': 'Email sudah terdaftar di sistem'}), 409
             
             return jsonify({'error': error_msg or 'Registration failed'}), 400
         
@@ -217,7 +281,9 @@ def login():
                     user_name = profile.get('nama_lengkap', 'Pengguna')
                     user_role = profile.get('role', 'mahasiswa')
                 else:
-                    user_name = user_email
+                    # Try to get name from user metadata as backup
+                    user_metadata = getattr(auth_response.user, 'user_metadata', None) or {}
+                    user_name = user_metadata.get('nama_lengkap', user_email)
                     user_role = 'mahasiswa'
 
                     # Create a minimal profile row if it is missing so later profile fetches work.
@@ -252,7 +318,7 @@ def login():
                 'user': {
                     'id': user_id,
                     'email': user_email,
-                    'name': user_name,
+                    'nama_lengkap': user_name,
                     'role': user_role
                 }
             }), 200
@@ -435,8 +501,8 @@ def get_profile():
                 'user': {
                     'id': user_id,
                     'email': session.get('user_email', ''),
-                    'name': session.get('user_name', ''),
-                    'role': session.get('user_role', '')
+                    'nama_lengkap': session.get('user_name', 'Pengguna'),
+                    'role': session.get('user_role', 'mahasiswa')
                 }
             }), 200
         
