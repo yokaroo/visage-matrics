@@ -48,21 +48,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 // Simpan preferensi "Remember Me"
                 const checkRemember = document.getElementById('checkRemember');
-const loginName = payload.user.nama_lengkap || payload.user.name || payload.user.email || 'Pengguna';
-                    if (checkRemember && checkRemember.checked) {
-                        localStorage.setItem('isLoggedIn', 'true');
-                        localStorage.setItem('userRole', payload.user.role);
-                        localStorage.setItem('userName', loginName);
-                        if (email) {
-                            localStorage.setItem(`user_name_${email}`, loginName);
-                        }
-                    } else {
-                        sessionStorage.setItem('isLoggedIn', 'true');
-                        sessionStorage.setItem('userRole', payload.user.role);
-                        sessionStorage.setItem('userName', loginName);
-                        if (email) {
-                            localStorage.setItem(`user_name_${email}`, loginName);
-                        }
+                const loginName = payload.user.nama_lengkap || payload.user.name || payload.user.email || 'Pengguna';
+                if (checkRemember && checkRemember.checked) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', payload.user.role);
+                    localStorage.setItem('userName', loginName);
+                    if (email) {
+                        localStorage.setItem(`user_name_${email}`, loginName);
+                    }
+                } else {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('userRole', payload.user.role);
+                    sessionStorage.setItem('userName', loginName);
+                    if (email) {
+                        localStorage.setItem(`user_name_${email}`, loginName);
+                    }
+                }
+
                 try {
                     const { data: supaData, error: supaError } = await supabase.auth.signInWithPassword({
                         email: email,
@@ -74,6 +76,7 @@ const loginName = payload.user.nama_lengkap || payload.user.name || payload.user
                 } catch (supaErr) {
                     console.warn('[LOGIN] Supabase client sign-in failed:', supaErr);
                 }
+
                 // Redirect berdasarkan role
                 setTimeout(() => {
                     if (payload.user.role && payload.user.role.toLowerCase() === 'admin') {
